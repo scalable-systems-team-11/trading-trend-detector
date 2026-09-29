@@ -1,0 +1,2 @@
+Put the DEBS 2022 trading data CSV files here (they are git-ignored).
+See the "Data" section in README.md for the download command.
