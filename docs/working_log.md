@@ -13,9 +13,7 @@
 ## 6.10.2026 — Yuhang: local implementation and validation 
 
 This entry records the current state after the debugging and validation above.
-The comparison baseline is the group's downloaded master commit `8b0f5f9`
-(29 September MVP). That version already provided CSV replay, pacing, TCP
-transport and Docker scaffolding; its receiver only printed events and counts.
+The comparison baseline is the group's repo (29 September MVP). That version already provided CSV replay, pacing, TCP transport and Docker scaffolding; its receiver only printed events and counts.
 The local implementation adds five-minute per-symbol windows, closing-price
 selection, zero-seeded EMA38/EMA100 and BUY/SELL crossover detection. 
 
