@@ -20,7 +20,6 @@ class SymbolState:
 class Metrics:
     received: int = 0
     accepted: int = 0
-    index_date_fallback: int = 0
     invalid: int = 0
     no_price: int = 0
     late: int = 0

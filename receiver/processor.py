@@ -85,18 +85,9 @@ class StreamProcessor:
             symbol = event.get("id")
             if not isinstance(symbol, str) or not symbol.strip():
                 raise ValueError("missing symbol")
-            sec_type = event.get("sec_type")
-            if sec_type not in ("E", "I"):
+            if event.get("sec_type") not in ("E", "I"):
                 raise ValueError("unsupported security type")
-            trading_date = event.get("trading_date")
-            # Observed index rows carry Trading time and a value but no
-            # Trading date. Explicitly infer their day from system Date.
-            # Keep Trading time; do not replace a supplied invalid trade date
-            # or infer a date for equities. This same-day policy is documented.
-            index_date_fallback = sec_type == "I" and trading_date in (None, "")
-            if index_date_fallback:
-                trading_date = event.get("date")
-            timestamp = self._timestamp(trading_date, event.get("trading_time"))
+            timestamp = self._timestamp(event.get("trading_date"), event.get("trading_time"))
         except (ValueError, TypeError, OverflowError):
             self.metrics.invalid += 1
             return []
@@ -108,8 +99,6 @@ class StreamProcessor:
             self.metrics.late += 1
             return []
         self.metrics.accepted += 1
-        if index_date_fallback:
-            self.metrics.index_date_fallback += 1
         if symbol not in self.states:
             self.states[symbol] = SymbolState()
         key = (start, symbol)
