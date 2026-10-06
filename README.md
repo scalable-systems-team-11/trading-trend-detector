@@ -38,10 +38,17 @@ docker compose run --rm -e REPLAY_SYMBOLS=ENGI.FR replayer
 - ~12k rows per day have no `Time` at all; the replayer skips them for now.
 - Rows with `Last = 0.000000` (and `Trading time = 00:00:00.000`) are placeholders with
   arbitrary timestamps, not trades; `--only-prices` drops them.
+- `--start` and `--end` filter the system `Time` column. Because rows can be
+  out of order, `--end` skips later timestamps and scans the entire input unless
+  `--limit` is reached; it does not terminate at the first later row.
 
 ### Stream processing
 
-The processor uses `Trading date` and `Trading time` for event-time windows;
+The processor uses `Trading date` and `Trading time` for event-time windows.
+Observed index rows (`SecType=I`) can lack `Trading date`; for these rows only,
+the processor uses system `Date` with `Trading time` and counts accepted
+inferences as `index_date_fallback`. This assumes same-day index updates and
+must be explained in the report. Equities still require a trading date;
 the replayer still uses system `Time` for pacing. Each nonempty window produces
 one JSON row with `symbol`, `window_start`, `window_end`, `close`, `ema38`,
 `ema100` and `advisory` (`BUY`, `SELL`, or null). A `run_id` separates sequential
