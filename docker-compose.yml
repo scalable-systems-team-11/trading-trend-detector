@@ -4,6 +4,12 @@ services:
     environment:
       RECEIVER_PORT: "9999"
       RECEIVER_PRINT_EVERY: "10000"
+      RECEIVER_ALLOWED_LATENESS_SECONDS: "${RECEIVER_ALLOWED_LATENESS_SECONDS:-0}"
+      RECEIVER_OUTPUT: /output/windows.jsonl
+      RECEIVER_FLUSH_PARTIAL: "${RECEIVER_FLUSH_PARTIAL:-0}"
+      RECEIVER_SYMBOLS: "${RECEIVER_SYMBOLS:-}"
+    volumes:
+      - ./output:/output
 
   replayer:
     build: ./replayer
