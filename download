@@ -1,0 +1,6 @@
+docs/ai/*
+data/*
+!data/PUT_DATA_FILES_HERE.txt
+output/
+__pycache__/
+*.pyc
