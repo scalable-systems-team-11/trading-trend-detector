@@ -10,16 +10,14 @@
 - 6.10 (AI-assisted local follow-up) Windows replay logs showed a successful TCP connection but zero emitted events with an 08:00–09:00 filter. Reproduced an early-return bug using a late placeholder followed by in-range trades; changed the end-time filter to skip rows and continue scanning. All 12 synthetic tests pass; real-data rerun remains pending.
 - 6.10 (AI-assisted local follow-up) User's real-data sample showed five index rows with nonzero Last, valid Trading time and NULL Trading date. Added an explicit index-only same-day date inference from system Date, with an accepted-record counter. Supplied trading dates retain priority; missing equity dates or trading times remain invalid. All 14 tests pass; full real-data correctness and the date-inference assumption still need validation.
 
-## 6.10.2026 — Yuhang: local implementation and validation (AI-assisted)
+## 6.10.2026 — Yuhang: local implementation and validation 
 
 This entry records the current state after the debugging and validation above.
 The comparison baseline is the group's downloaded master commit `8b0f5f9`
 (29 September MVP). That version already provided CSV replay, pacing, TCP
 transport and Docker scaffolding; its receiver only printed events and counts.
 The local implementation adds five-minute per-symbol windows, closing-price
-selection, zero-seeded EMA38/EMA100 and BUY/SELL crossover detection. No changes
-have been pushed to GitHub. Final team ownership and the engineering policies
-still need group review.
+selection, zero-seeded EMA38/EMA100 and BUY/SELL crossover detection. 
 
 ### New project files — 8
 
@@ -48,8 +46,7 @@ still need group review.
 
 ### Generated run and validation files — not source code
 
-These files were generated on Yuhang's Windows computer and uploaded for
-verification. They are not included in the source ZIP or committed to git.
+These files were generated on Yuhang's Windows computer and uploaded for verification. 
 
 | File in the Windows project | Origin | Contents and role |
 |---|---|---|
@@ -61,9 +58,6 @@ downloaded Monday DEBS 2022 dataset (4,672,671,094 bytes), not a newly implement
 file or a run result. Keep it in `data/` when updating source code. Generated
 `output/` files can be retained as evidence; a new run can generate new results.
 
-The distribution files `trading-trend-detector.zip` and
-`window-ema-crossover.patch` package the local code/documentation changes.
-They exclude the raw CSV and generated run files.
 
 ### Validation completed
 
