@@ -52,7 +52,7 @@ def parse_args(argv=None):
     p.add_argument("--symbols", default=env("symbols", ""),
                    help="comma-separated symbol IDs to emit, e.g. RDSA.NL,SIE.ETR (default: all)")
     p.add_argument("--start", default=env("start", ""), help="skip events before this time (HH:MM[:SS])")
-    p.add_argument("--end", default=env("end", ""), help="stop at events after this time (HH:MM[:SS])")
+    p.add_argument("--end", default=env("end", ""), help="skip events after this time (HH:MM[:SS]); scans all input rows")
     p.add_argument("--limit", type=int, default=int(env("limit", 0)), help="stop after N emitted events (0 = no limit)")
     p.add_argument("--sink", choices=["stdout", "tcp"], default=env("sink", "stdout"))
     p.add_argument("--tcp-host", default=env("tcp_host", "localhost"))
@@ -145,15 +145,17 @@ def replay(args, sink):
                 if skipped <= 3:
                     log(f"skipping row with bad time: {ev}")
                 continue
-            if start is not None and t < start:
-                continue
-            if end is not None and t > end:
-                return emitted, skipped
             # Last == 0 rows are placeholders (Trading time 00:00:00) with
             # arbitrary timestamps, not trades.
             if args.only_prices and (ev["last"] is None or float(ev["last"]) == 0):
                 continue
             if symbols and ev["id"] not in symbols:
+                continue
+            if start is not None and t < start:
+                continue
+            # Time is only roughly ordered. A later row can still fall inside
+            # the requested range, so exceeding --end must not stop the scan.
+            if end is not None and t > end:
                 continue
 
             # Pace by event time. Events are only roughly ordered, so never
