@@ -14,7 +14,9 @@ of this work has not yet been agreed by the team.
 | `tests/test_processor.py` | Query correctness, boundary and failure cases |
 | `tests/test_pipeline.py` | Existing CSV replayer through real TCP to processor output |
 
-The existing `replayer/replay.py` is unchanged. GUI, distributed execution,
+The existing `replayer/replay.py` has a time-filter fix: rows after `--end` are
+skipped instead of terminating the scan, so placeholders and out-of-order rows
+cannot hide subsequent in-range trades. GUI, distributed execution,
 real-data performance experiments, and the final report remain separate work.
 
 ## Rules taken from the project specification
@@ -32,8 +34,15 @@ real-data performance experiments, and the final report remain separate work.
 
 ## Engineering policies to confirm with the team
 
-**Clock.** Use the starred `Trading date` / `Trading time` fields. Do not silently
-fall back to system date/time for missing trading timestamps. Treat the supplied
+**Clock.** Use the starred `Trading date` / `Trading time` fields. In the observed
+real-data sample, index (`SecType=I`) rows have prices and `Trading time` but
+NULL `Trading date`. For indexes only, infer a missing/empty trading date from
+system `Date`, keeping `Trading time`. This is an explicit same-day assumption,
+not a date provided by the original trade or a specified course requirement;
+confirm it with the group and include it in the report. Count accepted inferred
+records as `index_date_fallback` in summaries. A supplied trading date always
+takes priority; an invalid supplied date is rejected. Equities with missing
+trading dates and all records missing trading times remain invalid. Treat the supplied
 CEST clock as fixed UTC+02:00, rather than applying European November DST rules.
 Timestamps are parsed to integer microseconds, including the four-digit
 fractional seconds described by the dataset. Replayer pacing remains based on
@@ -85,7 +94,7 @@ and partial flag. The receiver adds `run_id` and flushes the result immediately
 after finalization. Docker writes to host `output/windows.jsonl`; direct Python
 runs default to stdout. Logs and per-run summaries go to stderr.
 
-Counters include received, accepted, invalid, no-price, late, windows, BUY and
+Counters include received, accepted, index-date-fallback, invalid, no-price, late, windows, BUY and
 SELL, symbol count and pending windows. Receiver summaries additionally include
 wire line count, malformed JSON, elapsed wall time and input events/second.
 This rate includes socket waiting and output work. It is **not** an end-to-end

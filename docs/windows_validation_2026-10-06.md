@@ -77,3 +77,35 @@ unit tests exercise both crossovers.
 Next compare a bounded source-event sample against an independent batch
 aggregation, then validate a longer trading interval containing equities
 and price changes. No GitHub writes were performed.
+
+## Follow-up: source-event sample comparison
+
+Uploaded `price_sample.jsonl`: 100 replayed records (15,803 bytes), SHA-256
+`fb9dbd61ee8061a7143b805e6246c9619289a4a82c44a27ce50c0cc110c735ca`. All records are index `2ICEU.FR`, with NULL Trading date;
+system Date is 08-11-2021 and Trading time spans 08:00:00.103–08:24:45.370.
+The sample is an extracted replayer output, not the original CSV; CSV column
+mapping remains outside this check.
+
+Without importing the receiver processor, parsed timestamps using the explicit
+index same-day inference, grouped ticks into five-minute windows and selected
+the greatest (trading timestamp, arrival ordinal) for each close. Recalculated
+50-digit Decimal EMAs from those sample closes and compared count, close,
+window end, previous/current EMAs and advisory against uploaded output.
+
+| Window | Sample events | Sample close | Signal | Comparison |
+|---|---:|---:|---|---|
+| 08:00–08:05 | 20 | 92.501 | BUY | All fields match |
+| 08:05–08:10 | 20 | 92.501 | none | All fields match |
+| 08:10–08:15 | 20 | 92.501 | none | All fields match |
+| 08:15–08:20 | 20 | 92.501 | none | All fields match |
+| 08:20–08:25 | 20 | 92.501 | none | Observed fields match; sample ends before boundary |
+
+The first four windows are complete relative to the sample's event-time
+progress. The fifth group's observed values match the corresponding full-run
+output, but the sample stops before 08:25, so it alone cannot establish that
+window's complete source membership. All 100 sample prices are equal; this
+validates sample grouping/counts and numerical recurrence but cannot distinguish
+a latest-price close policy from other price-selection policies on varying
+prices. No mismatch found. This strengthens the evidence for this one index
+prefix and does not validate every source tick, missing-date inference semantics,
+real-data SELL behavior, or the 323 invalid records.
