@@ -5,13 +5,43 @@ from decimal import Decimal, localcontext
 from receiver.processor import StreamProcessor
 
 
-def event(price=100, time="08:00:00.000", symbol="SIE.ETR", date="08-11-2021", **extra):
+def event(price=100, time="08:00:00.000", symbol="SIE.ETR", date="08-11-2021",
+          system_date="01-01-2000", **extra):
     return {"id": symbol, "sec_type": "E", "last": str(price),
             "trading_date": date, "trading_time": time,
-            "date": "01-01-2000", "time": "00:00:00.000", **extra}
+            "date": system_date, "time": "00:00:00.000", **extra}
 
 
 class ProcessorTests(unittest.TestCase):
+    def test_index_missing_trade_date_uses_system_date_and_trading_time(self):
+        p = StreamProcessor()
+        p.process(event(16022.6, symbol="A0C4CA.ETR",
+                        sec_type="I", trading_date=None, system_date="08-11-2021",
+                        time="23:59:00.000", trading_time="08:00:00.000"))
+        row, = p.process(event(16030, "08:05:00.000", symbol="A0C4CA.ETR",
+                              sec_type="I", trading_date="", system_date="08-11-2021"))
+        self.assertEqual(row["close"], 16022.6)
+        self.assertTrue(row["window_start"].startswith("2021-11-08T08:00:00"))
+        self.assertEqual(row["advisory"], "BUY")
+        self.assertEqual(p.metrics.accepted, 2)
+        self.assertEqual(p.metrics.index_date_fallback, 2)
+        self.assertEqual(p.metrics.invalid, 0)
+
+    def test_index_date_fallback_does_not_replace_bad_or_present_trade_fields(self):
+        p = StreamProcessor()
+        for extra in [dict(sec_type="E", trading_date=None),
+                      dict(sec_type="I", trading_date=None, system_date=None),
+                      dict(sec_type="I", trading_date=None, trading_time=None),
+                      dict(sec_type="I", trading_date="bad", system_date="08-11-2021")]:
+            p.process(event(**extra))
+        self.assertEqual(p.metrics.invalid, 4)
+        self.assertEqual(p.metrics.index_date_fallback, 0)
+        # A supplied trading date takes priority over a different system date.
+        p.process(event(sec_type="I", system_date="09-11-2021"))
+        row, = p.process(event(time="08:05:00", sec_type="I", system_date="09-11-2021"))
+        self.assertTrue(row["window_start"].startswith("2021-11-08T08:00:00"))
+        self.assertEqual(p.metrics.index_date_fallback, 0)
+
     def test_boundary_and_zero_seed(self):
         p = StreamProcessor()
         self.assertEqual(p.process(event(90, "08:00:00.000")), [])

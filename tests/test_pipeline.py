@@ -1,4 +1,4 @@
-"""Real TCP ingestion plus the unchanged CSV replayer; no Docker required."""
+"""Real TCP ingestion plus the CSV replayer; no Docker required."""
 import csv
 import json
 from pathlib import Path
