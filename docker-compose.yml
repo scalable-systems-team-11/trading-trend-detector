@@ -8,6 +8,8 @@ services:
       RECEIVER_OUTPUT: /output/windows.jsonl
       RECEIVER_FLUSH_PARTIAL: "${RECEIVER_FLUSH_PARTIAL:-0}"
       RECEIVER_SYMBOLS: "${RECEIVER_SYMBOLS:-}"
+      RECEIVER_BENCH_OUTPUT: /output/benchmarks.jsonl
+      RECEIVER_BENCH_LABEL: "${BENCH_LABEL:-}"
     volumes:
       - ./output:/output
 

@@ -13,6 +13,7 @@ import sys
 import threading
 import time
 
+from .bench import Bench, host_info, write_result
 from .processor import StreamProcessor
 
 HOST = os.environ.get("RECEIVER_HOST", "0.0.0.0")
@@ -22,6 +23,8 @@ LATENESS = float(os.environ.get("RECEIVER_ALLOWED_LATENESS_SECONDS", 0))
 OUTPUT = os.environ.get("RECEIVER_OUTPUT", "")
 INCLUDE_PARTIAL = os.environ.get("RECEIVER_FLUSH_PARTIAL", "0") == "1"
 SUBSCRIPTIONS = os.environ.get("RECEIVER_SYMBOLS", "")
+BENCH_OUTPUT = os.environ.get("RECEIVER_BENCH_OUTPUT", "")
+BENCH_LABEL = os.environ.get("RECEIVER_BENCH_LABEL", "")
 
 
 def log(message):
@@ -49,6 +52,7 @@ class Handler(socketserver.StreamRequestHandler):
         run_id = f"{time.time_ns()}-{peer}"
         output = open(OUTPUT, "a", encoding="utf-8") if OUTPUT else sys.stdout
         n = malformed = 0
+        bench = Bench()
 
         def emit(rows):
             for row in rows:
@@ -64,7 +68,12 @@ class Handler(socketserver.StreamRequestHandler):
                 except (ValueError, UnicodeDecodeError):
                     malformed += 1
                 else:
-                    emit(processor.process(event))
+                    began = time.perf_counter()
+                    rows = processor.process(event)
+                    bench.processed(began)
+                    emit(rows)
+                    if rows and isinstance(event, dict):
+                        bench.emitted(event.get("sent_ns"), len(rows))
                 if PRINT_EVERY > 0 and n % PRINT_EVERY == 0:
                     rate = n / max(time.monotonic() - begin, 1e-9)
                     output.flush()
@@ -72,7 +81,19 @@ class Handler(socketserver.StreamRequestHandler):
             emit(processor.finish(include_partial=INCLUDE_PARTIAL))
             output.flush()
             elapsed = time.monotonic() - begin
-            log(f"{peer} closed; {json.dumps({'run_id': run_id, 'lines': n, 'malformed': malformed, 'elapsed_seconds': elapsed, 'events_per_second': n / max(elapsed, 1e-9), **processor.summary()})}")
+            counters = {"lines": n, "malformed": malformed, **processor.summary()}
+            benchmark = bench.summary()
+            log(f"{peer} closed; {json.dumps({'run_id': run_id, 'elapsed_seconds': elapsed, 'events_per_second': n / max(elapsed, 1e-9), **counters, 'benchmark': benchmark})}")
+            if BENCH_OUTPUT:
+                write_result(BENCH_OUTPUT, {
+                    "kind": "receiver", "run_id": run_id, "label": BENCH_LABEL,
+                    "finished_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    "host": host_info(),
+                    "config": {"allowed_lateness_seconds": LATENESS, "flush_partial": INCLUDE_PARTIAL,
+                               "subscriptions": SUBSCRIPTIONS},
+                    "counters": counters, **benchmark,
+                })
+                log(f"benchmark appended to {BENCH_OUTPUT}")
         finally:
             if output is not sys.stdout:
                 output.close()

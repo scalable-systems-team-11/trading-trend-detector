@@ -59,6 +59,8 @@ def parse_args(argv=None):
     p.add_argument("--tcp-port", type=int, default=int(env("tcp_port", 9999)))
     p.add_argument("--progress", type=int, default=int(env("progress", 100_000)),
                    help="log progress to stderr every N emitted events (0 = off)")
+    p.add_argument("--stamp", action=argparse.BooleanOptionalAction, default=env("stamp", "1") == "1",
+                   help="add a sent_ns wall-clock stamp to each event for latency measurement (default: on)")
     args = p.parse_args(argv)
     if not args.files:
         p.error("no input files given (argument or REPLAY_FILES)")
@@ -168,6 +170,8 @@ def replay(args, sink):
                 if delay > 0:
                     time.sleep(delay)
 
+            if args.stamp:
+                ev["sent_ns"] = time.time_ns()
             sink.send(json.dumps(ev))
             emitted += 1
             if args.progress and emitted % args.progress == 0:
@@ -181,9 +185,12 @@ def replay(args, sink):
 def main():
     args = parse_args()
     sink = make_sink(args)
+    begin = time.monotonic()
     try:
         emitted, skipped = replay(args, sink)
-        log(f"done, {emitted} events emitted, {skipped} rows skipped (bad time)")
+        elapsed = time.monotonic() - begin
+        log(f"done, {emitted} events emitted, {skipped} rows skipped (bad time), "
+            f"{elapsed:.1f} s, {emitted / max(elapsed, 1e-9):.0f} ev/s")
     except (KeyboardInterrupt, BrokenPipeError):
         pass
     finally:

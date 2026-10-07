@@ -82,6 +82,41 @@ The final incomplete window is withheld on disconnect. For previews only, set
 See [semantics and limitations](docs/stream_processor.md), including the
 proposed empty-window policy that the team should confirm.
 
+### Benchmarking
+
+Every receiver run reports a `benchmark` block in its final `closed;` log line
+and, under Docker, appends it to `output/benchmarks.jsonl` (set
+`RECEIVER_BENCH_OUTPUT` for direct Python runs). Label runs to tell them apart:
+
+```bash
+BENCH_LABEL=speed0-fullday docker compose up --build
+```
+
+| Field | Meaning |
+| --- | --- |
+| `events_per_second` | Received events / time from first to last event (includes pacing waits) |
+| `processor_events_per_second` | Events / time spent inside `StreamProcessor.process` only |
+| `cpu_seconds`, `cpu_utilization` | Receiver CPU time and CPU/wall ratio (1.0 = one core busy) |
+| `peak_rss_mb` | Peak receiver memory (not reported on Windows) |
+| `latency_ms` | p50/p95/p99/max from replayer send (`sent_ns`) to window row written |
+
+The replayer stamps `sent_ns` on each event (disable with `--no-stamp`), so
+latency is only valid when replayer and receiver share a clock. All windows
+closing at one boundary share one trigger event, so percentiles are coarse.
+Measure throughput with `REPLAY_SPEED=0` and latency at a paced speed below
+saturation, in separate runs.
+
+To benchmark the processor alone (no TCP, no CSV re-scan), extract price
+events once and run the in-process benchmark on that file:
+
+```bash
+python3 replayer/replay.py data/debs2022-gc-trading-day-08-11-21.csv \
+    --speed 0 --only-prices --no-stamp --progress 0 > data/prices-08-11-21.jsonl
+python3 bench/bench_processor.py data/prices-08-11-21.jsonl --label baseline
+```
+
+Results are appended to `output/benchmarks.jsonl` with `"kind": "processor"`.
+
 ### Tests and running without Docker
 
 No additional Python packages are needed (Python 3.10+; Docker uses 3.12).
