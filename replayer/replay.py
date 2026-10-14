@@ -111,7 +111,13 @@ class TcpSink:
         self.out.write(line + "\n")
 
     def close(self):
+        # Signal end of stream, then wait for the receiver to close its side.
+        # Exiting right away can lose unsent data when Docker tears down the
+        # container's network, leaving the receiver waiting forever.
         self.out.close()
+        self.sock.shutdown(socket.SHUT_WR)
+        while self.sock.recv(4096):
+            pass
         self.sock.close()
 
 
