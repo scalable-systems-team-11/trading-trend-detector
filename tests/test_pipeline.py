@@ -24,7 +24,8 @@ class PipelineTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             csv_path = Path(tmp) / "fixture.csv"
-            output = Path(tmp) / "windows.jsonl"
+            output_dir = Path(tmp) / "output"
+            output_dir.mkdir()
             with csv_path.open("w", newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow(FIELDS)
@@ -32,7 +33,7 @@ class PipelineTests(unittest.TestCase):
                                          (200, "08:05:00.000"), (0, "23:59:00.000")]:
                     writer.writerow(["SIE.ETR", "E", "08-11-2021", timestamp,
                                      price, timestamp, "08-11-2021"])
-            with patch.object(receiver, "OUTPUT", str(output)), patch.object(receiver, "LATENESS", 0), patch.object(receiver, "INCLUDE_PARTIAL", False), patch.object(receiver, "SUBSCRIPTIONS", ""), patch.object(receiver, "PRINT_EVERY", 0), patch.object(receiver, "log", capture):
+            with patch.object(receiver, "OUTPUT", str(output_dir)), patch.object(receiver, "LATENESS", 0), patch.object(receiver, "INCLUDE_PARTIAL", False), patch.object(receiver, "SUBSCRIPTIONS", ""), patch.object(receiver, "PRINT_EVERY", 0), patch.object(receiver, "log", capture):
                 with receiver.Server(("127.0.0.1", 0), receiver.Handler) as server:
                     thread = threading.Thread(target=server.serve_forever, daemon=True)
                     thread.start()
@@ -48,6 +49,7 @@ class PipelineTests(unittest.TestCase):
                     finally:
                         server.shutdown()
                         thread.join(5)
+            output, = output_dir.glob("windows-*.jsonl")
             rows = [json.loads(line) for line in output.read_text().splitlines()]
             self.assertEqual((emitted, skipped), (4, 0))
             self.assertEqual(len(rows), 1)

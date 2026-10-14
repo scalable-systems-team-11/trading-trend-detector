@@ -21,16 +21,23 @@ This starts two services:
 - **receiver** ([receiver/receiver.py](receiver/receiver.py)): TCP ingestion feeding
   [the processor](receiver/processor.py), which calculates per-symbol five-minute
   windows, EMA38/EMA100 and BUY/SELL crossovers. Diagnostics and rate summaries
-  go to stderr; result rows are appended to `output/windows.jsonl` on the host.
+  go to stderr; each run writes its result rows to a new
+  `output/windows-<UTC time>.jsonl` on the host.
 
-Both are configured with environment variables in [docker-compose.yml](docker-compose.yml)
-(`REPLAY_*`, `RECEIVER_*`). Run `python3 replayer/replay.py --help` for all replayer
-options. Useful overrides:
+Both are configured with environment variables (`REPLAY_*`, `RECEIVER_*`); the defaults are in
+[docker-compose.yml](docker-compose.yml). To change them, copy [.env.example](.env.example) to
+`.env` (git-ignored) and uncomment what you need. Docker Compose reads `.env` automatically.
+For example, a full day as fast as possible:
 
 ```
-docker compose run --rm -e REPLAY_SPEED=0 replayer      # no pacing, as fast as possible
-docker compose run --rm -e REPLAY_SYMBOLS=ENGI.FR replayer
+REPLAY_SPEED=0
+REPLAY_START=
 ```
+
+An empty `REPLAY_START=` means from midnight.
+
+The receiver keeps listening after the replay ends; stop it with Ctrl+C once it has logged its
+`closed;` summary. Run `python3 replayer/replay.py --help` for all replayer options.
 
 ### Data quirks
 

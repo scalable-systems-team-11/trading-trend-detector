@@ -11,3 +11,4 @@
 - 6.10 (Yuhang, AI-assisted local follow-up) Index rows have no Trading date in the real data, so for those we use the system Date instead (same-day assumption, needs to be mentioned in the report)
 - 6.10 (Yuhang) First real-data run on Monday 08:00-09:00, results in docs/windows_validation_2026-10-06.md. Still to do: Docker test, throughput/latency measurements, checking SELL signals on real data
 - 13.10 (Jens) Cleanup: shortened this log and the README back to original format
+- 14.10 (Jens) Tried some full day runs on Monday data. Got varyings throughput speeds, from 20k to 50k events/seconds. According to docker stats, bottleneck is currently the replayer (CPU usage maxed out while conusmer only uses ~60% CPU). Made some small fixes: replayer exiting before all data was sent, added .env, output by datetime etc. Also: realised that about 1M equity trades currently get dropped for missing trading date, maybe we need to use the system date here?

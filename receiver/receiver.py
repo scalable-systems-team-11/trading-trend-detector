@@ -47,7 +47,13 @@ class Handler(socketserver.StreamRequestHandler):
         log(f"connection from {peer}; fresh EMA state")
         begin = time.monotonic()
         run_id = f"{time.time_ns()}-{peer}"
-        output = open(OUTPUT, "a", encoding="utf-8") if OUTPUT else sys.stdout
+        if OUTPUT:
+            # One file per run so earlier results are kept; container time is UTC.
+            path = os.path.join(OUTPUT, time.strftime("windows-%Y-%m-%dT%H-%M-%S.jsonl", time.gmtime()))
+            output = open(path, "a", encoding="utf-8")
+            log(f"writing results to {path}")
+        else:
+            output = sys.stdout
         n = malformed = 0
 
         def emit(rows):

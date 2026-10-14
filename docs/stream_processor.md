@@ -91,7 +91,7 @@ between multiple producers.
 Each finalized nonempty window emits a JSON row with both current and previous
 EMA values, window boundaries, close, number of accepted price events, advisory,
 and partial flag. The receiver adds `run_id` and flushes the result immediately
-after finalization. Docker writes to host `output/windows.jsonl`; direct Python
+after finalization. Docker writes one host file per run, `output/windows-<UTC time>.jsonl`; direct Python
 runs default to stdout. Logs and per-run summaries go to stderr.
 
 Counters include received, accepted, index-date-fallback, invalid, no-price, late, windows, BUY and

@@ -5,7 +5,7 @@ services:
       RECEIVER_PORT: "9999"
       RECEIVER_PRINT_EVERY: "10000"
       RECEIVER_ALLOWED_LATENESS_SECONDS: "${RECEIVER_ALLOWED_LATENESS_SECONDS:-0}"
-      RECEIVER_OUTPUT: /output/windows.jsonl
+      RECEIVER_OUTPUT: /output  # one windows-<UTC time>.jsonl per run
       RECEIVER_FLUSH_PARTIAL: "${RECEIVER_FLUSH_PARTIAL:-0}"
       RECEIVER_SYMBOLS: "${RECEIVER_SYMBOLS:-}"
     volumes:
@@ -19,10 +19,14 @@ services:
       # CSV files are not baked into the image; put them in ./data on the host.
       - ./data:/data:ro
     environment:
-      REPLAY_FILES: /data/debs2022-gc-trading-day-08-11-21.csv
-      REPLAY_SPEED: "60"
-      REPLAY_ONLY_PRICES: "1"
-      REPLAY_START: "08:00"
+      # Override any of these in .env (see .env.example).
+      REPLAY_FILES: "${REPLAY_FILES:-/data/debs2022-gc-trading-day-08-11-21.csv}"
+      REPLAY_SPEED: "${REPLAY_SPEED:-60}"
+      REPLAY_ONLY_PRICES: "${REPLAY_ONLY_PRICES:-1}"
+      REPLAY_START: "${REPLAY_START-08:00}"
+      REPLAY_END: "${REPLAY_END:-}"
+      REPLAY_SYMBOLS: "${REPLAY_SYMBOLS:-}"
+      REPLAY_LIMIT: "${REPLAY_LIMIT:-0}"
       REPLAY_SINK: tcp
       REPLAY_TCP_HOST: receiver
       REPLAY_TCP_PORT: "9999"
