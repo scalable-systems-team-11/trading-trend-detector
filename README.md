@@ -117,6 +117,53 @@ python3 bench/bench_processor.py data/prices-08-11-21.jsonl --label baseline
 
 Results are appended to `output/benchmarks.jsonl` with `"kind": "processor"`.
 
+### Kafka pipeline
+
+An alternative to the TCP receiver, partitioned by symbol so the processor can
+scale across worker processes:
+
+```
+replayer --(key = symbol)--> Kafka topic, W partitions --> W worker processes --> output/kafka-windows.w<i>.jsonl
+```
+
+- **Broker:** Apache Kafka (KRaft, single node) from `docker-compose.yml`; the
+  `kafka-init` service creates the topic with `KAFKA_WORKERS` partitions.
+- **Producer:** `replay.py --sink kafka` (service `producer`). It keys events by
+  symbol, so each symbol always lands on one partition, and finishes by sending an
+  end-of-stream marker to every partition.
+- **Workers:** [receiver/kafka_worker.py](receiver/kafka_worker.py) starts
+  `KAFKA_WORKERS` processes in one container; worker *i* reads partition *i*
+  with its own `StreamProcessor` (same code as the TCP path). **Workers must equal
+  partitions**: a worker reading several partitions drops events as late because
+  the partitions advance unevenly in event time. The worker refuses to start otherwise.
+- Kafka services are in the `kafka` compose profile; plain `docker compose up` still
+  runs the TCP pipeline.
+
+```bash
+# unpaced, 4 workers; add REPLAY_START= for the whole day
+BENCH_LABEL=kafka-4w KAFKA_WORKERS=4 docker compose --profile kafka up --build
+# Ctrl+C once the worker logs "run complete", then reset the broker:
+docker compose --profile kafka down
+```
+
+Always run `down` (or use a new `KAFKA_TOPIC`) between runs: workers read the topic
+from the beginning, so a topic reused from an earlier run would mix in old data.
+Per-worker rows go to `output/kafka-windows.w<i>.jsonl`, and one `"kind": "kafka"`
+record with totals, per-worker numbers and merged latency percentiles is appended to
+`output/benchmarks.jsonl`. Throughput there is first-event to last-event over all
+workers, so it excludes startup but includes any wait on the producer; the producer
+parsing the CSV is usually the limit. Latency here also includes time spent in Kafka.
+
+Check that the results equal the TCP pipeline's, for the same input range:
+
+```bash
+python3 bench/compare_outputs.py output/windows.jsonl "output/kafka-windows.w*.jsonl"
+```
+
+Each worker's watermark only advances from its own symbols, so a worker can close
+windows later than the single processor. The output should match, but late-event
+drops can differ slightly for out-of-order input.
+
 ### Tests and running without Docker
 
 No additional Python packages are needed (Python 3.10+; Docker uses 3.12).

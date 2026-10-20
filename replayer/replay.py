@@ -16,6 +16,9 @@ Examples:
 
     # as fast as possible into a TCP socket
     python replayer/replay.py data/*.csv --speed 0 --sink tcp --tcp-port 9999
+
+    # into a Kafka topic (needs kafka-python), keyed by symbol
+    python replayer/replay.py data/*.csv --sink kafka --kafka-bootstrap localhost:9092
 """
 
 import argparse
@@ -54,9 +57,13 @@ def parse_args(argv=None):
     p.add_argument("--start", default=env("start", ""), help="skip events before this time (HH:MM[:SS])")
     p.add_argument("--end", default=env("end", ""), help="skip events after this time (HH:MM[:SS]); scans all input rows")
     p.add_argument("--limit", type=int, default=int(env("limit", 0)), help="stop after N emitted events (0 = no limit)")
-    p.add_argument("--sink", choices=["stdout", "tcp"], default=env("sink", "stdout"))
+    p.add_argument("--sink", choices=["stdout", "tcp", "kafka"], default=env("sink", "stdout"))
     p.add_argument("--tcp-host", default=env("tcp_host", "localhost"))
     p.add_argument("--tcp-port", type=int, default=int(env("tcp_port", 9999)))
+    p.add_argument("--kafka-bootstrap", default=env("kafka_bootstrap", "localhost:9092"),
+                   help="Kafka bootstrap servers (host:port[,host:port])")
+    p.add_argument("--kafka-topic", default=env("kafka_topic", "ticks"),
+                   help="topic to publish to; events are keyed by symbol ID")
     p.add_argument("--progress", type=int, default=int(env("progress", 100_000)),
                    help="log progress to stderr every N emitted events (0 = off)")
     p.add_argument("--stamp", action=argparse.BooleanOptionalAction, default=env("stamp", "1") == "1",
@@ -117,9 +124,67 @@ class TcpSink:
         self.sock.close()
 
 
+class KafkaSink:
+    """Publish events to a Kafka topic, keyed by symbol ID.
+
+    The key sends every event of a symbol to the same partition, which keeps
+    per-symbol order. Kafka has no end-of-stream, so close() sends one
+    {"type": "eos"} marker to every partition for the workers to finish on.
+    The topic must already exist (docker-compose creates it).
+    """
+    keyed = True
+    EOS = json.dumps({"type": "eos"}).encode()
+
+    def __init__(self, bootstrap, topic, retries=30):
+        from kafka import KafkaProducer  # imported lazily: only this sink needs it
+        self.topic = topic
+        self.errors = 0
+        for attempt in range(retries):
+            try:
+                self.producer = KafkaProducer(
+                    bootstrap_servers=bootstrap.split(","),
+                    linger_ms=5, batch_size=256 * 1024, acks=1,
+                )
+                break
+            except Exception as e:  # NoBrokersAvailable, or other connect errors while the broker starts
+                if attempt == retries - 1:
+                    raise
+                log(f"cannot connect to Kafka at {bootstrap} ({e!r}), retrying")
+                time.sleep(1)
+        self.partitions = self._partitions()
+
+    def _partitions(self, timeout=60):
+        deadline = time.monotonic() + timeout
+        while True:
+            found = self.producer.partitions_for(self.topic)
+            if found:
+                return sorted(found)
+            if time.monotonic() > deadline:
+                raise RuntimeError(f"topic {self.topic!r} not found; create it first")
+            time.sleep(1)
+
+    def _failed(self, exc):
+        self.errors += 1
+        if self.errors <= 3:
+            log(f"kafka send failed: {exc!r}")
+
+    def send(self, line, key):
+        self.producer.send(self.topic, key=key.encode(), value=line.encode()).add_errback(self._failed)
+
+    def close(self):
+        for partition in self.partitions:
+            self.producer.send(self.topic, value=self.EOS, partition=partition)
+        self.producer.flush()
+        self.producer.close()
+        log(f"sent end-of-stream to {len(self.partitions)} partitions of {self.topic!r}"
+            + (f"; {self.errors} sends failed" if self.errors else ""))
+
+
 def make_sink(args):
     if args.sink == "tcp":
         return TcpSink(args.tcp_host, args.tcp_port)
+    if args.sink == "kafka":
+        return KafkaSink(args.kafka_bootstrap, args.kafka_topic)
     return StdoutSink()
 
 
@@ -172,7 +237,10 @@ def replay(args, sink):
 
             if args.stamp:
                 ev["sent_ns"] = time.time_ns()
-            sink.send(json.dumps(ev))
+            if getattr(sink, "keyed", False):
+                sink.send(json.dumps(ev), ev["id"])
+            else:
+                sink.send(json.dumps(ev))
             emitted += 1
             if args.progress and emitted % args.progress == 0:
                 rate = emitted / max(time.monotonic() - wall_begin, 1e-9)
