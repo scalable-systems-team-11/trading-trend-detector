@@ -164,6 +164,66 @@ Each worker's watermark only advances from its own symbols, so a worker can clos
 windows later than the single processor. The output should match, but late-event
 drops can differ slightly for out-of-order input.
 
+### Flink pipeline
+
+A third option on the same Kafka topic: a PyFlink job ([flink/job.py](flink/job.py))
+instead of the worker processes.
+
+```
+replayer --(key = symbol)--> Kafka topic, P partitions --> Flink job --> output/flink-windows.w<i>.jsonl
+```
+
+- **Job:** Kafka source (one subtask per partition) -> parse/validate (reuses
+  `StreamProcessor.parse`) -> timestamps and watermarks -> `key_by(symbol)` -> window
+  operator. The window operator keeps each symbol's open windows and EMAs as Flink keyed
+  state and closes a window with an event-time timer ([flink/logic.py](flink/logic.py)).
+  EMA, advisory and output row come from the same functions as the TCP and Kafka paths.
+- **Watermarks:** Flink keeps one watermark per partition (bounded out of orderness =
+  `RECEIVER_ALLOWED_LATENESS_SECONDS`) and the window operator uses their minimum.
+  A fast partition therefore cannot make slower partitions' events late, which is what
+  forces the Kafka workers to use exactly one partition each. `FLINK_PARALLELISM` sets
+  the window operator's parallelism (default: one per partition) and may differ from
+  the partition count (`KAFKA_PARTITIONS`, default `KAFKA_WORKERS`).
+- **Input:** the job reads the topic from the start up to the offsets that exist when it
+  starts, so it runs after the producer has finished (compose enforces this) and the
+  container exits when the topic is consumed. Throughput is therefore a consumer-only
+  figure; latency is not measured, because records have been waiting in the topic.
+
+```bash
+BENCH_LABEL=flink-4p docker compose --profile flink run --rm flink
+docker compose --profile flink down      # reset the broker before the next run
+python3 bench/compare_outputs.py output/windows.jsonl "output/flink-windows.w*.jsonl"
+```
+
+Add `REPLAY_LIMIT=300000` for a small test. The benchmark record has `"kind": "flink"` and
+per-subtask details; its CPU and memory figures cover only the Python worker processes,
+not the JVM (use `docker stats` for the whole container).
+
+**Correctness.** On a 300k-event slice the output is identical to the TCP receiver's (same
+rows, same counters). On the full Monday it has the same 296,216 rows with none missing,
+but 2,617 rows in 47 symbols differ: the TCP receiver's single global watermark dropped
+68 events as late, the Flink job dropped none (one watermark per partition), and EMA
+carries the difference into later windows. In all 47 symbols the Flink row has the extra
+events. The Kafka workers dropped 48 and lost 19 final-window rows on the same data.
+
+**Speed** (8-core Docker VM, 4 partitions, unpaced, consumer only): ~21k events/s on the
+full day (550 s, ~1,800 s of Python CPU in 4 worker processes plus the JVM), ~23k on
+2M events. Each Python worker handles ~5-6k events/s because every record crosses the
+JVM/Python boundary several times (parse, timestamp, key selector, window), so this is
+slower than the plain-Python processor (~600k events/s on its own) and about as fast as the
+producer-bound Kafka workers. Things that did not help: a larger Python state cache
+(23.6k vs 23.3k), and `python.execution-mode=thread` (GIL-bound at ~1.5 cores, more than
+7x slower). PyFlink's default for local runs is "loopback" mode, which runs all Python
+functions as threads of one process (~6-8k events/s); the job switches to real worker
+processes (`_python_worker_execution_mode=process`). Extra Flink options can be passed
+with `FLINK_CONF="key=value,key=value"`.
+
+Notes: PyFlink 1.20 needs Python 3.11 and a JVM, so the job has its own image
+([flink/Dockerfile](flink/Dockerfile)). PyFlink has no Linux aarch64 wheels, so on Apple
+Silicon the first build compiles it from source (a few minutes). The job runs as a local
+mini cluster in one container: each subtask writes its own output file and statistics
+file, which would not work across machines.
+
 ### Tests and running without Docker
 
 No additional Python packages are needed (Python 3.10+; Docker uses 3.12).
