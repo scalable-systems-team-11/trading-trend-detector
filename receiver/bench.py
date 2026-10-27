@@ -100,12 +100,13 @@ def run_stamp():
 
 
 def write_result(directory, record):
-    """Write one benchmark record to its own <time>-<kind>[-<label>].json file in `directory`.
+    """Write one benchmark record to <directory>/<time>-<kind>[-<label>]/result.json.
 
-    One file per run, so results are never overwritten or mixed and can be committed.
+    One folder per run, so results are never overwritten or mixed, can be committed,
+    and other files of the run (e.g. docker stats) can be stored next to them.
     """
     name = "-".join(filter(None, [run_stamp(), record.get("kind"), record.get("label")]))
-    path = Path(directory) / (re.sub(r"[^A-Za-z0-9._-]+", "_", name) + ".json")
+    path = Path(directory) / re.sub(r"[^A-Za-z0-9._-]+", "_", name) / "result.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
     return path

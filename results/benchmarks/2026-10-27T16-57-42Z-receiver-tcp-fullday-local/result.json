@@ -1,0 +1,47 @@
+{
+  "kind": "receiver",
+  "run_id": "1793120022339352569-172.23.0.3:34440",
+  "label": "tcp-fullday-local",
+  "finished_at": "2026-10-27T16:57:42+0000",
+  "host": {
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.12.16",
+    "cpu_count": 4
+  },
+  "config": {
+    "allowed_lateness_seconds": 0.0,
+    "flush_partial": false,
+    "subscriptions": ""
+  },
+  "counters": {
+    "lines": 11794520,
+    "malformed": 0,
+    "received": 11794520,
+    "accepted": 10731977,
+    "index_date_fallback": 9811196,
+    "invalid": 1062475,
+    "no_price": 0,
+    "late": 68,
+    "windows": 307295,
+    "buy": 3306,
+    "sell": 0,
+    "symbols": 3306,
+    "pending_windows": 7
+  },
+  "events": 11794520,
+  "started_at_ns": 1793120022626016123,
+  "active_seconds": 239.67036594499996,
+  "events_per_second": 49211.424005196495,
+  "processor_seconds": 54.57302385753428,
+  "processor_events_per_second": 216123.62970375636,
+  "cpu_seconds": 121.86076589999999,
+  "cpu_utilization": 0.508451536841083,
+  "peak_rss_mb": 23.5,
+  "latency_ms": {
+    "samples": 307295,
+    "p50": 46.638152,
+    "p95": 289.367416,
+    "p99": 363.78649,
+    "max": 395.335754
+  }
+}

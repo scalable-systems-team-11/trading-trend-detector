@@ -8,7 +8,7 @@ services:
       RECEIVER_OUTPUT: /output  # one windows-<UTC time>.jsonl per run
       RECEIVER_FLUSH_PARTIAL: "${RECEIVER_FLUSH_PARTIAL:-0}"
       RECEIVER_SYMBOLS: "${RECEIVER_SYMBOLS:-}"
-      RECEIVER_BENCH_OUTPUT: /benchmarks  # one <UTC time>-<kind>-<label>.json per run
+      RECEIVER_BENCH_OUTPUT: /benchmarks  # one <UTC time>-<kind>-<label>/ folder per run
       RECEIVER_BENCH_LABEL: "${BENCH_LABEL:-}"
     volumes:
       - ./output:/output
@@ -90,7 +90,7 @@ services:
       RECEIVER_OUTPUT: /output  # kafka-windows-<UTC time>.w<i>.jsonl per run
       RECEIVER_FLUSH_PARTIAL: "${RECEIVER_FLUSH_PARTIAL:-0}"
       RECEIVER_SYMBOLS: "${RECEIVER_SYMBOLS:-}"
-      RECEIVER_BENCH_OUTPUT: /benchmarks  # one <UTC time>-<kind>-<label>.json per run
+      RECEIVER_BENCH_OUTPUT: /benchmarks  # one <UTC time>-<kind>-<label>/ folder per run
       RECEIVER_BENCH_LABEL: "${BENCH_LABEL:-}"
     volumes:
       - ./output:/output
@@ -133,7 +133,7 @@ services:
       RECEIVER_OUTPUT: /output  # flink-windows-<UTC time>.w<i>.jsonl per run
       RECEIVER_FLUSH_PARTIAL: "${RECEIVER_FLUSH_PARTIAL:-0}"
       RECEIVER_SYMBOLS: "${RECEIVER_SYMBOLS:-}"
-      RECEIVER_BENCH_OUTPUT: /benchmarks  # one <UTC time>-<kind>-<label>.json per run
+      RECEIVER_BENCH_OUTPUT: /benchmarks  # one <UTC time>-<kind>-<label>/ folder per run
       RECEIVER_BENCH_LABEL: "${BENCH_LABEL:-}"
     volumes:
       - ./output:/output

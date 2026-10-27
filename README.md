@@ -79,8 +79,9 @@ More details and open decisions: [docs/stream_processor.md](docs/stream_processo
 ### Benchmarking
 
 Every receiver run reports a `benchmark` block in its final `closed;` log line
-and, under Docker, writes it to its own file `results/benchmarks/<UTC time>-<kind>-<label>.json`
-(set the `RECEIVER_BENCH_OUTPUT` directory for direct Python runs). These files are
+and, under Docker, writes it to its own folder `results/benchmarks/<UTC time>-<kind>-<label>/result.json`
+(set the `RECEIVER_BENCH_OUTPUT` directory for direct Python runs). Other files of a run, such as
+`docker stats` samples, go in the same folder. These files are
 committed: they are the evidence for the design choices in the report, so keep them.
 Label runs to tell them apart:
 

@@ -1,0 +1,39 @@
+{
+  "kind": "processor",
+  "label": "processor-fullday-local",
+  "input": "data/prices-08-11-21.jsonl",
+  "finished_at": "2026-10-27T18:50:43+0200",
+  "host": {
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.31",
+    "python": "3.12.8",
+    "cpu_count": 4
+  },
+  "config": {
+    "allowed_lateness_seconds": 0.0,
+    "limit": 0
+  },
+  "counters": {
+    "received": 11794520,
+    "accepted": 10731977,
+    "index_date_fallback": 9811196,
+    "invalid": 1062475,
+    "no_price": 0,
+    "late": 68,
+    "windows": 307295,
+    "buy": 3306,
+    "sell": 0,
+    "symbols": 3306,
+    "pending_windows": 7,
+    "rows": 307295
+  },
+  "events": 11794520,
+  "started_at_ns": 1793119770723883422,
+  "active_seconds": 72.97115619099998,
+  "events_per_second": 161632.6315171459,
+  "processor_seconds": 41.2152343688623,
+  "processor_events_per_second": 286168.94166955515,
+  "cpu_seconds": 72.90978980000001,
+  "cpu_utilization": 0.9991590322230973,
+  "peak_rss_mb": 18.3125,
+  "total_seconds_including_parsing": 72.97122999099997
+}

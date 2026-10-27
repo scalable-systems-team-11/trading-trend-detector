@@ -42,7 +42,7 @@ def main():
     p.add_argument("--limit", type=int, default=0, help="stop after N events (0 = all)")
     p.add_argument("--lateness", type=float, default=0.0, help="allowed lateness in seconds")
     p.add_argument("--label", default="", help="free-text label stored with the result")
-    p.add_argument("--output", default="results/benchmarks", help="directory for the result file ('' = off)")
+    p.add_argument("--output", default="results/benchmarks", help="directory for the run's result folder ('' = off)")
     p.add_argument("--progress", type=int, default=1_000_000, help="log every N events (0 = off)")
     args = p.parse_args()
 

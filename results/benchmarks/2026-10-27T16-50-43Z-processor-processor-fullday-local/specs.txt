@@ -1,0 +1,4 @@
+Machine:  Jens's laptop, AMD Ryzen 7 5825U (8 cores / 16 threads), 15.3 GB RAM
+WSL2:     processors=4, memory=7GB, swap=2GB (.wslconfig) -> 4 vCPU, 6.8 GB visible
+Docker:   not used
+Run:      directly in WSL2 (no Docker), single Python process, Python 3.12.8
