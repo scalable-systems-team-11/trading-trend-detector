@@ -1,0 +1,47 @@
+{
+  "kind": "receiver",
+  "run_id": "1793124791579005606-172.23.0.3:49858",
+  "label": "tcp-fullday-csv",
+  "finished_at": "2026-10-27T18:17:44+0000",
+  "host": {
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.12.16",
+    "cpu_count": 8
+  },
+  "config": {
+    "allowed_lateness_seconds": 0.0,
+    "flush_partial": false,
+    "subscriptions": ""
+  },
+  "counters": {
+    "lines": 11794520,
+    "malformed": 0,
+    "received": 11794520,
+    "accepted": 10731977,
+    "index_date_fallback": 9811196,
+    "invalid": 1062475,
+    "no_price": 0,
+    "late": 68,
+    "windows": 307295,
+    "buy": 3306,
+    "sell": 0,
+    "symbols": 3306,
+    "pending_windows": 7
+  },
+  "events": 11794520,
+  "started_at_ns": 1793124791884409440,
+  "active_seconds": 272.864641183,
+  "events_per_second": 43224.80167772951,
+  "processor_seconds": 59.4396504152196,
+  "processor_events_per_second": 198428.48868740987,
+  "cpu_seconds": 133.26933599999998,
+  "cpu_utilization": 0.48840822842495474,
+  "peak_rss_mb": 23.30859375,
+  "latency_ms": {
+    "samples": 307295,
+    "p50": 54.279346,
+    "p95": 210.699816,
+    "p99": 283.343384,
+    "max": 287.344216
+  }
+}

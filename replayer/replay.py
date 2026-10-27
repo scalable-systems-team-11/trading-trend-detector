@@ -19,6 +19,11 @@ Examples:
 
     # into a Kafka topic (needs kafka-python), keyed by symbol
     python replayer/replay.py data/*.csv --sink kafka --kafka-bootstrap localhost:9092
+
+    # extract the price events once, then replay the much faster .jsonl
+    python replayer/replay.py data/debs2022-gc-trading-day-08-11-21.csv --speed 0 \
+        --only-prices --no-stamp --progress 0 > data/prices-08-11-21.jsonl
+    python replayer/replay.py data/prices-08-11-21.jsonl --speed 0 --sink tcp
 """
 
 import argparse
@@ -47,7 +52,8 @@ def env(name, default=None):
 
 def parse_args(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("files", nargs="*", default=env("files", "").split(), help="CSV file(s), replayed in order")
+    p.add_argument("files", nargs="*", default=env("files", "").split(),
+                   help="CSV or extracted .jsonl file(s), replayed in order")
     p.add_argument("--speed", type=float, default=float(env("speed", 1.0)),
                    help="replay speed factor: 1 = real time, 60 = one minute per second, 0 = no pacing")
     p.add_argument("--only-prices", action="store_true", default=env("only_prices", "") == "1",
@@ -83,7 +89,19 @@ def to_seconds(hms):
 
 
 def read_events(path):
-    """Yield dicts with the FIELDS of each event row; empty values become None."""
+    """Yield dicts with the FIELDS of each event row; empty values become None.
+
+    Reads a DEBS CSV, or a .jsonl file of events this replayer wrote earlier
+    (--sink stdout). Parsing the CSV is the slow part of a replay, so extracting
+    the price events once and replaying the .jsonl is several times faster.
+    """
+    if path.endswith(".jsonl"):
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                ev = json.loads(line)
+                # Drop anything else, e.g. a stale sent_ns from a stamped extract.
+                yield {out: ev.get(out) for out in FIELDS.values()}
+        return
     with open(path, newline="") as f:
         rows = csv.reader(line for line in f if not line.startswith("#"))
         header = [h.strip() for h in next(rows)]

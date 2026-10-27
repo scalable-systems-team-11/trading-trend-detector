@@ -1,0 +1,4 @@
+Machine:  Jens's laptop, AMD Ryzen 7 5825U (8 cores / 16 threads), 15.3 GB RAM
+WSL2:     processors=8, memory=10GB, swap=2GB (.wslconfig) -> 8 vCPU, 9 GB visible
+Docker:   28.1.1 inside WSL2, no per-container CPU/memory limits
+Run:      replayer and receiver in separate containers; input prices-08-11-21.jsonl, unpaced, whole day

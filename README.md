@@ -36,6 +36,16 @@ REPLAY_START=
 
 An empty `REPLAY_START=` means from midnight.
 
+Parsing the CSV is the slowest part of a replay (~59k events/s). For faster runs, extract the
+price events once and replay the `.jsonl` instead (~150k events/s, same events):
+
+```
+python3 replayer/replay.py data/debs2022-gc-trading-day-08-11-21.csv --speed 0 \
+    --only-prices --no-stamp --progress 0 > data/prices-08-11-21.jsonl
+```
+
+Then set `REPLAY_FILES=/data/prices-08-11-21.jsonl` in `.env`.
+
 The receiver keeps listening after the replay ends; stop it with Ctrl+C once it has logged its
 `closed;` summary. Run `python3 replayer/replay.py --help` for all replayer options.
 

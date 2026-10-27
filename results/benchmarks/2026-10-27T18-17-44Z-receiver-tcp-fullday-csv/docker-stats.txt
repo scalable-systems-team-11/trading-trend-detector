@@ -1,0 +1,3 @@
+Only averages were kept for this run (raw samples were overwritten):
+trading-trend-detector-receiver-1 avg CPU 47%
+trading-trend-detector-replayer-1 avg CPU 97%
