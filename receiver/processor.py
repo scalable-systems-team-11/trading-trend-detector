@@ -19,6 +19,34 @@ ALPHA38 = 2 / 39
 ALPHA100 = 2 / 101
 
 
+def iso(timestamp):
+    return (EPOCH + timedelta(microseconds=timestamp)).astimezone(CEST).isoformat(timespec="microseconds")
+
+
+def advance_ema(state, close):
+    """Apply one finished window to a symbol's EMAs; return (previous38, previous100, advisory)."""
+    previous38, previous100 = state.ema38, state.ema100
+    state.ema38 = ALPHA38 * close + (1 - ALPHA38) * previous38
+    state.ema100 = ALPHA100 * close + (1 - ALPHA100) * previous100
+    advisory = None
+    if state.ema38 > state.ema100 and previous38 <= previous100:
+        advisory = "BUY"
+    elif state.ema38 < state.ema100 and previous38 >= previous100:
+        advisory = "SELL"
+    return previous38, previous100, advisory
+
+
+def window_row(symbol, start, end, close, event_count, state, previous38, previous100, advisory, partial):
+    return {
+        "type": "window", "symbol": symbol,
+        "window_start": iso(start), "window_end": iso(end),
+        "close": close, "event_count": event_count,
+        "ema38": state.ema38, "ema100": state.ema100,
+        "previous_ema38": previous38, "previous_ema100": previous100,
+        "advisory": advisory, "partial": partial,
+    }
+
+
 class StreamProcessor:
     def __init__(self, allowed_lateness_seconds=0.0, subscribed_symbols=None):
         if not math.isfinite(allowed_lateness_seconds) or allowed_lateness_seconds < 0:
@@ -57,29 +85,29 @@ class StreamProcessor:
         microseconds = int(fraction.ljust(6, "0")) if fraction else 0
         return self._date_cache[date] + (hour * 3600 + minute * 60 + second) * SECOND + microseconds
 
-    @staticmethod
-    def _iso(timestamp):
-        return (EPOCH + timedelta(microseconds=timestamp)).astimezone(CEST).isoformat(timespec="microseconds")
+    _iso = staticmethod(iso)
 
-    def process(self, event):
-        """Return finalized window rows; skip invalid/non-price/too-late rows."""
-        if self.finished:
-            raise RuntimeError("cannot process after finish")
+    def parse(self, event):
+        """Validate one raw event.
+
+        Returns (symbol, price, timestamp, index_date_fallback), or None if the event
+        is not a usable price (counted as invalid or no_price). Does not touch windows.
+        """
         self.metrics.received += 1
         if not isinstance(event, dict):
             self.metrics.invalid += 1
-            return []
+            return None
         try:
             raw_price = event.get("last")
             if raw_price is None or raw_price == "":
                 self.metrics.no_price += 1
-                return []
+                return None
             if isinstance(raw_price, bool):
                 raise ValueError("boolean price")
             price = float(raw_price)
             if price == 0:
                 self.metrics.no_price += 1
-                return []
+                return None
             if not math.isfinite(price) or price < 0:
                 raise ValueError("invalid price")
             symbol = event.get("id")
@@ -99,8 +127,17 @@ class StreamProcessor:
             timestamp = self._timestamp(trading_date, event.get("trading_time"))
         except (ValueError, TypeError, OverflowError):
             self.metrics.invalid += 1
-            return []
+            return None
+        return symbol, price, timestamp, index_date_fallback
 
+    def process(self, event):
+        """Return finalized window rows; skip invalid/non-price/too-late rows."""
+        if self.finished:
+            raise RuntimeError("cannot process after finish")
+        parsed = self.parse(event)
+        if parsed is None:
+            return []
+        symbol, price, timestamp, index_date_fallback = parsed
         start = timestamp // WINDOW * WINDOW
         end = start + WINDOW
         # Late events may update open windows. Finalized output is immutable.
@@ -134,26 +171,15 @@ class StreamProcessor:
             end, start, symbol = heapq.heappop(self.ends)
             window = self.pending.pop((start, symbol))
             state = self.states[symbol]
-            previous38, previous100 = state.ema38, state.ema100
-            state.ema38 = ALPHA38 * window.close + (1 - ALPHA38) * previous38
-            state.ema100 = ALPHA100 * window.close + (1 - ALPHA100) * previous100
-            advisory = None
-            if state.ema38 > state.ema100 and previous38 <= previous100:
-                advisory = "BUY"
+            previous38, previous100, advisory = advance_ema(state, window.close)
+            if advisory == "BUY":
                 self.metrics.buy += 1
-            elif state.ema38 < state.ema100 and previous38 >= previous100:
-                advisory = "SELL"
+            elif advisory == "SELL":
                 self.metrics.sell += 1
             self.metrics.windows += 1
             if self.subscriptions is None or symbol in self.subscriptions:
-                rows.append({
-                    "type": "window", "symbol": symbol,
-                    "window_start": self._iso(start), "window_end": self._iso(end),
-                    "close": window.close, "event_count": window.event_count,
-                    "ema38": state.ema38, "ema100": state.ema100,
-                    "previous_ema38": previous38, "previous_ema100": previous100,
-                    "advisory": advisory, "partial": partial,
-                })
+                rows.append(window_row(symbol, start, end, window.close, window.event_count,
+                                       state, previous38, previous100, advisory, partial))
         return rows
 
     def finish(self, include_partial=False):
