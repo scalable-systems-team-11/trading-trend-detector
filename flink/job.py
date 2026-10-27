@@ -15,13 +15,13 @@ Run from the repository root: python3 -m flink.job (docker compose --profile fli
   FLINK_PARALLELISM sets the parallelism of the keyed window operator (default: same).
 - The window operator keeps one SymbolWindows per symbol as keyed state and one
   event-time timer per open window (flink/logic.py), and writes rows to
-  <RECEIVER_OUTPUT stem>.w<subtask>.jsonl like the Kafka workers do. Each subtask
+  <RECEIVER_OUTPUT>/flink-windows-<time>.w<subtask>.jsonl like the Kafka workers do. Each subtask
   writes its own file, so this runs as a local mini cluster inside one container.
 - Windows that are incomplete at the end of input are withheld, as elsewhere,
   unless RECEIVER_FLUSH_PARTIAL=1 (rows then carry partial: true).
 
 Per-subtask statistics are collected in a temporary directory and merged into one
-{"kind": "flink"} record in RECEIVER_BENCH_OUTPUT. Throughput runs from the first
+{"kind": "flink"} record file in the RECEIVER_BENCH_OUTPUT directory. Throughput runs from the first
 record read to the last window closed and excludes JVM startup; the Python CPU and
 memory figures cover only the Python worker processes, not the JVM (use
 `docker stats` for the whole container). Latency is not measured: the topic is
@@ -45,7 +45,7 @@ from pyflink.datastream.state import ValueStateDescriptor
 
 from flink.logic import (LATE, MAX_WATERMARK, NEW, SymbolWindows, add_event, aggregate_stats,
                          finish_window, start_of_timer, timer_ms)
-from receiver.bench import host_info, peak_rss_mb, write_result
+from receiver.bench import host_info, peak_rss_mb, run_stamp, write_result
 from receiver.kafka_worker import output_path
 from receiver.processor import StreamProcessor
 
@@ -147,7 +147,7 @@ class WindowFunction(KeyedProcessFunction):
         self.index = runtime_context.get_index_of_this_subtask()
         self.state = runtime_context.get_state(ValueStateDescriptor("symbol", Types.PICKLED_BYTE_ARRAY()))
         self.stats = Stats(self.stats_dir, "window", self.index, self.run_id)
-        self.output = open(output_path(self.output_base, self.index), "a", encoding="utf-8") if self.output_base else None
+        self.output = open(output_path(self.output_base, self.index), "w", encoding="utf-8") if self.output_base else None
         self.max_timestamp = None  # newest accepted event time (us) seen by this subtask
         self.symbols = set()
         self.counters = dict.fromkeys(
@@ -211,7 +211,7 @@ def partition_count():
         consumer.close()
 
 
-def build_job(env, partitions, parallelism, stats_dir, run_id):
+def build_job(env, partitions, parallelism, stats_dir, run_id, output_base):
     subscriptions = [s.strip() for s in SUBSCRIPTIONS.split(",") if s.strip()]
     source = (KafkaSource.builder()
               .set_bootstrap_servers(BOOTSTRAP)
@@ -227,7 +227,7 @@ def build_job(env, partitions, parallelism, stats_dir, run_id):
         .process(ParseFunction(stats_dir, run_id), PARSED).name("parse")
         .assign_timestamps_and_watermarks(watermarks)
         .key_by(lambda v: v[0], key_type=Types.STRING())
-        .process(WindowFunction(stats_dir, run_id, OUTPUT, INCLUDE_PARTIAL, subscriptions), Types.STRING())
+        .process(WindowFunction(stats_dir, run_id, output_base, INCLUDE_PARTIAL, subscriptions), Types.STRING())
         .set_parallelism(parallelism).name("windows"))
 
 
@@ -250,7 +250,9 @@ def main():
     env.set_parallelism(partitions)  # source and watermark operators: one subtask per partition
     env.get_config().set_auto_watermark_interval(WATERMARK_INTERVAL_MS)
     env.add_jars(f"file://{KAFKA_JAR}")
-    build_job(env, partitions, parallelism, stats_dir, run_id)
+    # One set of files per run; every subtask gets the same name from here.
+    output_base = os.path.join(OUTPUT, f"flink-windows-{run_stamp()}.jsonl") if OUTPUT else ""
+    build_job(env, partitions, parallelism, stats_dir, run_id, output_base)
 
     begin = time.monotonic()
     env.execute("trading-trend-detector")
@@ -263,7 +265,7 @@ def main():
     total = aggregate_stats(records)
     log("run complete; " + json.dumps({"run_id": run_id, "total_seconds": total_seconds, **total}))
     if BENCH_OUTPUT:
-        write_result(BENCH_OUTPUT, {
+        path = write_result(BENCH_OUTPUT, {
             "kind": "flink", "run_id": run_id, "label": BENCH_LABEL,
             "finished_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
             "host": host_info(), "topic": TOPIC,
@@ -273,7 +275,7 @@ def main():
             "total_seconds": total_seconds, **total,
             "per_subtask": [{k: v for k, v in r.items() if k != "run_id"} for r in records],
         })
-        log(f"benchmark appended to {BENCH_OUTPUT}")
+        log(f"benchmark written to {path}")
 
 
 if __name__ == "__main__":

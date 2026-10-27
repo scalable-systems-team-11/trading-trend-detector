@@ -79,8 +79,10 @@ More details and open decisions: [docs/stream_processor.md](docs/stream_processo
 ### Benchmarking
 
 Every receiver run reports a `benchmark` block in its final `closed;` log line
-and, under Docker, appends it to `output/benchmarks.jsonl` (set
-`RECEIVER_BENCH_OUTPUT` for direct Python runs). Label runs to tell them apart:
+and, under Docker, writes it to its own file `results/benchmarks/<UTC time>-<kind>-<label>.json`
+(set the `RECEIVER_BENCH_OUTPUT` directory for direct Python runs). These files are
+committed: they are the evidence for the design choices in the report, so keep them.
+Label runs to tell them apart:
 
 ```bash
 BENCH_LABEL=speed0-fullday docker compose up --build
@@ -109,7 +111,7 @@ python3 replayer/replay.py data/debs2022-gc-trading-day-08-11-21.csv \
 python3 bench/bench_processor.py data/prices-08-11-21.jsonl --label baseline
 ```
 
-Results are appended to `output/benchmarks.jsonl` with `"kind": "processor"`.
+The result goes to `results/benchmarks/` with `"kind": "processor"`.
 
 ### Kafka pipeline
 
@@ -117,7 +119,7 @@ An alternative to the TCP receiver, partitioned by symbol so the processor can
 scale across worker processes:
 
 ```
-replayer --(key = symbol)--> Kafka topic, W partitions --> W worker processes --> output/kafka-windows.w<i>.jsonl
+replayer --(key = symbol)--> Kafka topic, W partitions --> W worker processes --> output/kafka-windows-<time>.w<i>.jsonl
 ```
 
 - **Broker:** Apache Kafka (KRaft, single node) from `docker-compose.yml`; the
@@ -142,16 +144,16 @@ docker compose --profile kafka down
 
 Always run `down` (or use a new `KAFKA_TOPIC`) between runs: workers read the topic
 from the beginning, so a topic reused from an earlier run would mix in old data.
-Per-worker rows go to `output/kafka-windows.w<i>.jsonl`, and one `"kind": "kafka"`
-record with totals, per-worker numbers and merged latency percentiles is appended to
-`output/benchmarks.jsonl`. Throughput there is first-event to last-event over all
+Per-worker rows go to `output/kafka-windows-<time>.w<i>.jsonl`, and one `"kind": "kafka"`
+record with totals, per-worker numbers and merged latency percentiles is written to
+`results/benchmarks/`. Throughput there is first-event to last-event over all
 workers, so it excludes startup but includes any wait on the producer; the producer
 parsing the CSV is usually the limit. Latency here also includes time spent in Kafka.
 
 Check that the results equal the TCP pipeline's, for the same input range:
 
 ```bash
-python3 bench/compare_outputs.py output/windows-<run time>.jsonl "output/kafka-windows.w*.jsonl"
+python3 bench/compare_outputs.py output/windows-<run time>.jsonl "output/kafka-windows-<time>.w*.jsonl"
 ```
 
 Each worker's watermark only advances from its own symbols, so a worker can close
@@ -164,7 +166,7 @@ A third option on the same Kafka topic: a PyFlink job ([flink/job.py](flink/job.
 instead of the worker processes.
 
 ```
-replayer --(key = symbol)--> Kafka topic, P partitions --> Flink job --> output/flink-windows.w<i>.jsonl
+replayer --(key = symbol)--> Kafka topic, P partitions --> Flink job --> output/flink-windows-<time>.w<i>.jsonl
 ```
 
 - **Job:** Kafka source (one subtask per partition) -> parse/validate (reuses
@@ -186,7 +188,7 @@ replayer --(key = symbol)--> Kafka topic, P partitions --> Flink job --> output/
 ```bash
 BENCH_LABEL=flink-4p docker compose --profile flink run --rm flink
 docker compose --profile flink down      # reset the broker before the next run
-python3 bench/compare_outputs.py output/windows-<run time>.jsonl "output/flink-windows.w*.jsonl"
+python3 bench/compare_outputs.py output/windows-<run time>.jsonl "output/flink-windows-<time>.w*.jsonl"
 ```
 
 Add `REPLAY_LIMIT=300000` for a small test. The benchmark record has `"kind": "flink"` and

@@ -13,6 +13,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import sys
 import time
 
@@ -93,8 +94,18 @@ class Bench:
         }
 
 
-def write_result(path, record):
-    """Append one benchmark record as a JSON line."""
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(record) + "\n")
+def run_stamp():
+    """UTC time for run file names, e.g. 2026-10-27T17-05-09Z."""
+    return time.strftime("%Y-%m-%dT%H-%M-%SZ", time.gmtime())
+
+
+def write_result(directory, record):
+    """Write one benchmark record to its own <time>-<kind>[-<label>].json file in `directory`.
+
+    One file per run, so results are never overwritten or mixed and can be committed.
+    """
+    name = "-".join(filter(None, [run_stamp(), record.get("kind"), record.get("label")]))
+    path = Path(directory) / (re.sub(r"[^A-Za-z0-9._-]+", "_", name) + ".json")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    return path

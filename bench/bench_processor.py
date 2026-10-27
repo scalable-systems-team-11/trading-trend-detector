@@ -42,7 +42,7 @@ def main():
     p.add_argument("--limit", type=int, default=0, help="stop after N events (0 = all)")
     p.add_argument("--lateness", type=float, default=0.0, help="allowed lateness in seconds")
     p.add_argument("--label", default="", help="free-text label stored with the result")
-    p.add_argument("--output", default="output/benchmarks.jsonl", help="append the result here ('' = off)")
+    p.add_argument("--output", default="results/benchmarks", help="directory for the result file ('' = off)")
     p.add_argument("--progress", type=int, default=1_000_000, help="log every N events (0 = off)")
     args = p.parse_args()
 
@@ -74,8 +74,7 @@ def main():
     result.pop("latency_ms")  # No transport, so no end-to-end latency here.
     print(json.dumps(result, indent=2))
     if args.output:
-        write_result(args.output, result)
-        print(f"[bench] appended to {args.output}", file=sys.stderr)
+        print(f"[bench] written to {write_result(args.output, result)}", file=sys.stderr)
 
 
 if __name__ == "__main__":

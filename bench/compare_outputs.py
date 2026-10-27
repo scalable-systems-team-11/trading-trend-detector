@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare window rows of a reference run (TCP receiver) with a candidate run (Kafka workers).
 
-    python3 bench/compare_outputs.py output/windows.jsonl "output/kafka-windows.w*.jsonl"
+    python3 bench/compare_outputs.py output/windows-<time>.jsonl "output/kafka-windows-<time>.w*.jsonl"
 
 Each file is appended to across runs; only the last run_id in each file is used.
 Rows are matched on (symbol, window_start). Both runs must replay the same input

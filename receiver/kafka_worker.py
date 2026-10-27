@@ -33,7 +33,7 @@ import queue
 import sys
 import time
 
-from .bench import Bench, host_info, percentile, write_result
+from .bench import Bench, host_info, percentile, run_stamp, write_result
 from .processor import StreamProcessor
 
 BOOTSTRAP = os.environ.get("KAFKA_BOOTSTRAP", "localhost:9092")
@@ -103,7 +103,7 @@ def consume(consumer, partitions, processor, emit, bench, tag="", print_every=0)
     return lines, malformed
 
 
-def run_worker(worker, results):
+def run_worker(worker, results, output_base):
     """Process entry point: consume this worker's partitions, put the result in `results`."""
     from kafka import KafkaConsumer, TopicPartition  # imported lazily: only workers need it
 
@@ -127,7 +127,7 @@ def run_worker(worker, results):
     processor = StreamProcessor(LATENESS, subscriptions)
     bench = Bench()
     run_id = f"{time.time_ns()}-{tag}"
-    output = open(output_path(OUTPUT, worker), "a", encoding="utf-8") if OUTPUT else sys.stdout
+    output = open(output_path(output_base, worker), "w", encoding="utf-8") if output_base else sys.stdout
 
     def emit(rows):
         for row in rows:
@@ -185,8 +185,11 @@ def main():
     if WORKERS < 1:
         raise SystemExit("KAFKA_WORKERS must be at least 1")
     log(f"starting {WORKERS} workers on {BOOTSTRAP} topic {TOPIC!r}")
+    # One set of files per run; all workers share the start time in their names.
+    output_base = os.path.join(OUTPUT, f"kafka-windows-{run_stamp()}.jsonl") if OUTPUT else ""
     results = multiprocessing.Queue()
-    processes = [multiprocessing.Process(target=run_worker, args=(i, results)) for i in range(WORKERS)]
+    processes = [multiprocessing.Process(target=run_worker, args=(i, results, output_base))
+                 for i in range(WORKERS)]
     for process in processes:
         process.start()
     collected = []
@@ -206,7 +209,7 @@ def main():
     log("run complete; " + json.dumps(total))
     if BENCH_OUTPUT:
         per_worker = [{k: v for k, v in r.items() if k != "latencies_ms"} for r in collected]
-        write_result(BENCH_OUTPUT, {
+        path = write_result(BENCH_OUTPUT, {
             "kind": "kafka", "label": BENCH_LABEL,
             "finished_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
             "host": host_info(), "topic": TOPIC,
@@ -214,7 +217,7 @@ def main():
                        "subscriptions": SUBSCRIPTIONS},
             **total, "per_worker": per_worker,
         })
-        log(f"benchmark appended to {BENCH_OUTPUT}")
+        log(f"benchmark written to {path}")
 
 
 if __name__ == "__main__":

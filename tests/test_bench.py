@@ -34,12 +34,11 @@ class BenchTests(unittest.TestCase):
         self.assertIsNone(summary["events_per_second"])
         self.assertIsNone(summary["latency_ms"]["p50"])
 
-    def test_write_result_appends(self):
+    def test_write_result_one_file_per_run(self):
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "sub" / "bench.jsonl"
-            write_result(path, {"a": 1})
-            write_result(path, {"a": 2})
-            self.assertEqual([json.loads(l)["a"] for l in path.read_text().splitlines()], [1, 2])
+            path = write_result(Path(tmp) / "sub", {"kind": "kafka", "label": "4 workers", "a": 1})
+            self.assertRegex(path.name, r"^\d{4}-\d\d-\d\dT\d\d-\d\d-\d\dZ-kafka-4_workers\.json$")
+            self.assertEqual(json.loads(path.read_text())["a"], 1)
 
 
 if __name__ == "__main__":

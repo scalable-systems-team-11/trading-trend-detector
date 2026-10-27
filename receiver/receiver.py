@@ -13,7 +13,7 @@ import sys
 import threading
 import time
 
-from .bench import Bench, host_info, write_result
+from .bench import Bench, host_info, run_stamp, write_result
 from .processor import StreamProcessor
 
 HOST = os.environ.get("RECEIVER_HOST", "0.0.0.0")
@@ -52,7 +52,7 @@ class Handler(socketserver.StreamRequestHandler):
         run_id = f"{time.time_ns()}-{peer}"
         if OUTPUT:
             # One file per run so earlier results are kept; container time is UTC.
-            path = os.path.join(OUTPUT, time.strftime("windows-%Y-%m-%dT%H-%M-%S.jsonl", time.gmtime()))
+            path = os.path.join(OUTPUT, f"windows-{run_stamp()}.jsonl")
             output = open(path, "a", encoding="utf-8")
             log(f"writing results to {path}")
         else:
@@ -91,7 +91,7 @@ class Handler(socketserver.StreamRequestHandler):
             benchmark = bench.summary()
             log(f"{peer} closed; {json.dumps({'run_id': run_id, 'elapsed_seconds': elapsed, 'events_per_second': n / max(elapsed, 1e-9), **counters, 'benchmark': benchmark})}")
             if BENCH_OUTPUT:
-                write_result(BENCH_OUTPUT, {
+                path = write_result(BENCH_OUTPUT, {
                     "kind": "receiver", "run_id": run_id, "label": BENCH_LABEL,
                     "finished_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                     "host": host_info(),
@@ -99,7 +99,7 @@ class Handler(socketserver.StreamRequestHandler):
                                "subscriptions": SUBSCRIPTIONS},
                     "counters": counters, **benchmark,
                 })
-                log(f"benchmark appended to {BENCH_OUTPUT}")
+                log(f"benchmark written to {path}")
         finally:
             if output is not sys.stdout:
                 output.close()
