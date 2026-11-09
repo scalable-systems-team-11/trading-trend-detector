@@ -1,0 +1,5 @@
+Machine:  Jens's laptop, AMD Ryzen 7 5825U (8 cores / 16 threads), 15.3 GB RAM
+WSL2:     processors=8, memory=10GB, swap=2GB (.wslconfig)
+Docker:   28.1.1 inside WSL2, no per-container CPU/memory limits
+Run:      producer + 1 worker(s) + 1 Kafka broker (only these started); input prices-08-11-21.jsonl, first 1M events from 08:00, unpaced
+Client:   producer confluent-kafka 2.16.1 (librdkafka); workers kafka-python 2.3.2 + crc32c

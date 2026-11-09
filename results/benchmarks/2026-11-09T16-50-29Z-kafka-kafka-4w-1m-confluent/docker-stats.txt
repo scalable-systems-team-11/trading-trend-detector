@@ -1,0 +1,5 @@
+docker stats summary while the container was busy (CPU > 5%); 100% = one core
+kafka-1      CPU mean   63%  max   74%  peak memory    742 MiB  (8 samples)
+producer-1   CPU mean   95%  max   95%  peak memory     39 MiB  (4 samples)
+worker-1     CPU mean   74%  max   74%  peak memory    106 MiB  (4 samples)
+Note: only 4 samples in this 22 s run, so these are unreliable. Worker CPU from result.json: 40.2 CPU-s in 22.4 s = ~180% (4 processes).

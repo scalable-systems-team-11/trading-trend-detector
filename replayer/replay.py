@@ -17,7 +17,7 @@ Examples:
     # as fast as possible into a TCP socket
     python replayer/replay.py data/*.csv --speed 0 --sink tcp --tcp-port 9999
 
-    # into a Kafka topic (needs kafka-python), keyed by symbol
+    # into a Kafka topic (needs confluent-kafka), keyed by symbol
     python replayer/replay.py data/*.csv --sink kafka --kafka-bootstrap localhost:9092
 
     # extract the price events once, then replay the much faster .jsonl
@@ -159,47 +159,58 @@ class KafkaSink:
     keyed = True
     EOS = json.dumps({"type": "eos"}).encode()
 
-    def __init__(self, bootstrap, topic, retries=30):
-        from kafka import KafkaProducer  # imported lazily: only this sink needs it
+    def __init__(self, bootstrap, topic):
+        # confluent-kafka (librdkafka, C) instead of kafka-python: the pure-Python
+        # producer capped the pipeline at one core. Imported lazily: only this sink needs it.
+        from confluent_kafka import Producer
         self.topic = topic
         self.errors = 0
-        for attempt in range(retries):
-            try:
-                self.producer = KafkaProducer(
-                    bootstrap_servers=bootstrap.split(","),
-                    linger_ms=5, batch_size=256 * 1024, acks=1,
-                )
-                break
-            except Exception as e:  # NoBrokersAvailable, or other connect errors while the broker starts
-                if attempt == retries - 1:
-                    raise
-                log(f"cannot connect to Kafka at {bootstrap} ({e!r}), retrying")
-                time.sleep(1)
+        self.producer = Producer({
+            "bootstrap.servers": bootstrap,
+            "linger.ms": 5, "batch.size": 256 * 1024, "acks": 1,
+            # Same symbol -> partition mapping as kafka-python and the Java client.
+            "partitioner": "murmur2_random",
+            # The delivery callback only runs for failed sends, not once per event.
+            "delivery.report.only.error": True,
+            "on_delivery": self._delivered,
+        })
         self.partitions = self._partitions()
 
     def _partitions(self, timeout=60):
         deadline = time.monotonic() + timeout
         while True:
-            found = self.producer.partitions_for(self.topic)
-            if found:
-                return sorted(found)
+            try:  # the broker may still be starting
+                found = self.producer.list_topics(self.topic, timeout=5).topics.get(self.topic)
+                if found and not found.error and found.partitions:
+                    return sorted(found.partitions)
+            except Exception as e:
+                log(f"cannot reach Kafka ({e!r}), retrying")
             if time.monotonic() > deadline:
                 raise RuntimeError(f"topic {self.topic!r} not found; create it first")
             time.sleep(1)
 
-    def _failed(self, exc):
-        self.errors += 1
-        if self.errors <= 3:
-            log(f"kafka send failed: {exc!r}")
+    def _delivered(self, err, msg):
+        if err is not None:
+            self.errors += 1
+            if self.errors <= 3:
+                log(f"kafka send failed: {err}")
+
+    def _produce(self, value, **kwargs):
+        while True:
+            try:
+                self.producer.produce(self.topic, value=value, **kwargs)
+                break
+            except BufferError:  # local queue full: let librdkafka deliver some first
+                self.producer.poll(0.1)
+        self.producer.poll(0)  # serve delivery callbacks
 
     def send(self, line, key):
-        self.producer.send(self.topic, key=key.encode(), value=line.encode()).add_errback(self._failed)
+        self._produce(line.encode(), key=key.encode())
 
     def close(self):
         for partition in self.partitions:
-            self.producer.send(self.topic, value=self.EOS, partition=partition)
+            self._produce(self.EOS, partition=partition)
         self.producer.flush()
-        self.producer.close()
         log(f"sent end-of-stream to {len(self.partitions)} partitions of {self.topic!r}"
             + (f"; {self.errors} sends failed" if self.errors else ""))
 

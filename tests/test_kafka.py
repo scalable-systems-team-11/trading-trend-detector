@@ -137,29 +137,30 @@ class WorkerTests(unittest.TestCase):
 
 
 class FakeProducer:
-    def __init__(self, **kwargs):
+    def __init__(self, config):
+        self.config = config
         self.sent = []
-        self.flushed = self.closed = False
+        self.flushed = False
 
-    def partitions_for(self, topic):
-        return {0, 1, 2}
+    def list_topics(self, topic, timeout=None):
+        meta = types.SimpleNamespace(error=None, partitions={0: None, 1: None, 2: None})
+        return types.SimpleNamespace(topics={topic: meta})
 
-    def send(self, topic, value=None, key=None, partition=None):
+    def produce(self, topic, value=None, key=None, partition=None):
         self.sent.append({"topic": topic, "key": key, "value": value, "partition": partition})
-        return types.SimpleNamespace(add_errback=lambda f: None)
+
+    def poll(self, timeout):
+        return 0
 
     def flush(self):
         self.flushed = True
 
-    def close(self):
-        self.closed = True
-
 
 class SinkTests(unittest.TestCase):
     def fake_kafka(self):
-        kafka = types.ModuleType("kafka")
-        kafka.KafkaProducer = FakeProducer
-        return patch.dict(sys.modules, {"kafka": kafka})
+        kafka = types.ModuleType("confluent_kafka")
+        kafka.Producer = FakeProducer
+        return patch.dict(sys.modules, {"confluent_kafka": kafka})
 
     def test_replay_keys_events_by_symbol_and_close_sends_eos_to_every_partition(self):
         with tempfile.TemporaryDirectory() as tmp, self.fake_kafka():
@@ -181,7 +182,7 @@ class SinkTests(unittest.TestCase):
             markers = [s for s in sent if s["partition"] is not None]
             self.assertEqual(sorted(s["partition"] for s in markers), [0, 1, 2])
             self.assertTrue(all(s["value"] == EOS for s in markers))
-            self.assertTrue(sink.producer.flushed and sink.producer.closed)
+            self.assertTrue(sink.producer.flushed)
 
 
 if __name__ == "__main__":
