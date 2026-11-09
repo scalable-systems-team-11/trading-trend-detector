@@ -1,0 +1,8 @@
+# Compose override for the baseline: removes the native crc32c package at container start,
+# so kafka-python falls back to its pure-Python CRC (the state before crc32c was added).
+# Used by bench/kafka_sweep.sh with CRC32C=0.
+services:
+  producer:
+    entrypoint: ["sh", "-c", "pip uninstall -qy crc32c && exec python replay.py"]
+  worker:
+    entrypoint: ["sh", "-c", "pip uninstall -qy crc32c && exec python -m receiver.kafka_worker"]
