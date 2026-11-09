@@ -73,8 +73,11 @@ class WorkerTests(unittest.TestCase):
         rows, processor, *_ = run_consume(batches, [0, 1])
         self.assertEqual(processor.metrics.late, 1)
 
+
     def test_output_path_per_worker(self):
-        self.assertEqual(kafka_worker.output_path("/output/windows.jsonl", 2), "/output/windows.w2.jsonl")
+        actual = kafka_worker.output_path("/output/windows.jsonl", 2)
+        expected = "/output/windows.w2.jsonl"
+        self.assertEqual(Path(actual), Path(expected))
 
     def test_consume_waits_for_eos_on_every_partition(self):
         batches = [
