@@ -34,19 +34,19 @@ real-data performance experiments, and the final report remain separate work.
 
 ## Engineering policies to confirm with the team
 
-**Clock.** Use the starred `Trading date` / `Trading time` fields. In the observed
-real-data sample, index (`SecType=I`) rows have prices and `Trading time` but
-NULL `Trading date`. For indexes only, infer a missing/empty trading date from
-system `Date`, keeping `Trading time`. This is an explicit same-day assumption,
-not a date provided by the original trade or a specified course requirement;
-confirm it with the group and include it in the report. Count accepted inferred
-records as `index_date_fallback` in summaries. A supplied trading date always
-takes priority; an invalid supplied date is rejected. Equities with missing
-trading dates and all records missing trading times remain invalid. Treat the supplied
-CEST clock as fixed UTC+02:00, rather than applying European November DST rules.
-Timestamps are parsed to integer microseconds, including the four-digit
-fractional seconds described by the dataset. Replayer pacing remains based on
-system `Time`; that clock does not define the processor's windows.
+**Clock.** Event time comes from the starred `Trading date` / `Trading time` fields.
+
+- **Missing Trading date:** use the system `Date` instead, keeping `Trading time`.
+  Applies to all security types. In Monday's data this covers all index rows
+  (9.8M) and most Frankfurt equities (1.06M rows, 1558 symbols, 99.98% `.ETR`).
+- **Why this is safe:** in all 920,799 Monday equity rows that have both, Trading
+  date equals system Date.
+- These rows are counted as `date_fallback` in run summaries.
+- A supplied Trading date always wins; an invalid one is rejected. Rows without
+  `Trading time` are invalid.
+- CEST is treated as fixed UTC+02:00 (no November DST rules). Timestamps are integer
+  microseconds, including the dataset's four-digit fractional seconds.
+- Replayer pacing uses system `Time`; that clock does not define the windows.
 
 **Close.** Choose the price at the greatest trading timestamp in a window.
 For equal timestamps, the last received event wins. This is an explicit

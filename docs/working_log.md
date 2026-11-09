@@ -20,3 +20,4 @@
 - 27.10 (Jens, AI-assisted) Try to improve the data reading speed by making the replayer read a pre-extracted .jsonl: TCP pipeline 43k -> 104k ev/s. Next bottleneck seems to be reciever json decoding and kafka-python producer?
 - 07-08.11 (Yuhang) Found a library to optimize calculating Kafka checksums, benchmarked it.
 - 9.11. (Jens) Tried also said library on reciever, benchmarked, added.
+- 9.11 (Jens) Decision: events without a Trading date now take their day from the system Date for all security types, not just indices. Before this, ~1.06M equity rows on Monday (99.98% Frankfurt, 1558 of 4840 symbols) were dropped as invalid, so Frankfurt equities were practically missing. Why? in all 920799 equity rows that do have a Trading date, it equals the system Date. Full-day event counts grow ~10%, so earlier full-day throughput numbers are not directly comparable. Also, started downloading full data set to get realistic runs for whole week.

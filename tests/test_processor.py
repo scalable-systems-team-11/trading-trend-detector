@@ -24,23 +24,34 @@ class ProcessorTests(unittest.TestCase):
         self.assertTrue(row["window_start"].startswith("2021-11-08T08:00:00"))
         self.assertEqual(row["advisory"], "BUY")
         self.assertEqual(p.metrics.accepted, 2)
-        self.assertEqual(p.metrics.index_date_fallback, 2)
+        self.assertEqual(p.metrics.date_fallback, 2)
         self.assertEqual(p.metrics.invalid, 0)
 
-    def test_index_date_fallback_does_not_replace_bad_or_present_trade_fields(self):
+    def test_equity_missing_trade_date_uses_system_date_and_trading_time(self):
         p = StreamProcessor()
-        for extra in [dict(sec_type="E", trading_date=None),
+        p.process(event(9.76, symbol="A0V8G2.ETR", trading_date=None,
+                        system_date="08-11-2021", trading_time="09:00:00.000"))
+        row, = p.process(event(9.8, "09:05:00.000", symbol="A0V8G2.ETR",
+                              trading_date=None, system_date="08-11-2021"))
+        self.assertEqual(row["close"], 9.76)
+        self.assertTrue(row["window_start"].startswith("2021-11-08T09:00:00"))
+        self.assertEqual(p.metrics.date_fallback, 2)
+        self.assertEqual(p.metrics.invalid, 0)
+
+    def test_date_fallback_does_not_replace_bad_or_present_trade_fields(self):
+        p = StreamProcessor()
+        for extra in [dict(sec_type="E", trading_date=None, system_date=None),
                       dict(sec_type="I", trading_date=None, system_date=None),
                       dict(sec_type="I", trading_date=None, trading_time=None),
                       dict(sec_type="I", trading_date="bad", system_date="08-11-2021")]:
             p.process(event(**extra))
         self.assertEqual(p.metrics.invalid, 4)
-        self.assertEqual(p.metrics.index_date_fallback, 0)
+        self.assertEqual(p.metrics.date_fallback, 0)
         # A supplied trading date takes priority over a different system date.
         p.process(event(sec_type="I", system_date="09-11-2021"))
         row, = p.process(event(time="08:05:00", sec_type="I", system_date="09-11-2021"))
         self.assertTrue(row["window_start"].startswith("2021-11-08T08:00:00"))
-        self.assertEqual(p.metrics.index_date_fallback, 0)
+        self.assertEqual(p.metrics.date_fallback, 0)
 
     def test_boundary_and_zero_seed(self):
         p = StreamProcessor()
@@ -115,7 +126,7 @@ class ProcessorTests(unittest.TestCase):
         p = StreamProcessor()
         invalid = [None, [], event(-1), event("NaN"), event("inf"), event(True),
                    event("oops"), event(id=""), event(sec_type="X"),
-                   event(trading_date=None), event(trading_date="31-02-2021"),
+                   event(trading_date=None, system_date=None), event(trading_date="31-02-2021"),
                    event(time="garbage", trading_time="24:00:00"),
                    event(trading_time="08:60:00"), event(trading_time="08:00:60"),
                    event(trading_time="08:00:00."), event(trading_time="08:00:00.0000001")]

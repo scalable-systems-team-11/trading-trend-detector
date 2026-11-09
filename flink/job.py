@@ -99,7 +99,7 @@ class Stats:
 
 
 class ParseFunction(ProcessFunction):
-    """JSON line -> (symbol, price, trading timestamp us, index_date_fallback), reusing StreamProcessor.parse."""
+    """JSON line -> (symbol, price, trading timestamp us, date_fallback), reusing StreamProcessor.parse."""
 
     def __init__(self, stats_dir, run_id):
         self.stats_dir, self.run_id = stats_dir, run_id
@@ -151,18 +151,18 @@ class WindowFunction(KeyedProcessFunction):
         self.max_timestamp = None  # newest accepted event time (us) seen by this subtask
         self.symbols = set()
         self.counters = dict.fromkeys(
-            ("accepted", "index_date_fallback", "late", "windows", "buy", "sell", "pending_windows"), 0)
+            ("accepted", "date_fallback", "late", "windows", "buy", "sell", "pending_windows"), 0)
 
     def process_element(self, value, ctx):
         self.stats.touch()
-        symbol, price, timestamp, index_date_fallback = value
+        symbol, price, timestamp, date_fallback = value
         sym = self.state.value() or SymbolWindows()
         outcome, start = add_event(sym, timestamp, price, ctx.timer_service().current_watermark())
         if outcome == LATE:
             self.counters["late"] += 1
             return ()
         self.counters["accepted"] += 1
-        self.counters["index_date_fallback"] += index_date_fallback
+        self.counters["date_fallback"] += date_fallback
         self.symbols.add(symbol)
         self.state.update(sym)
         if outcome == NEW:

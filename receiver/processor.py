@@ -90,7 +90,7 @@ class StreamProcessor:
     def parse(self, event):
         """Validate one raw event.
 
-        Returns (symbol, price, timestamp, index_date_fallback), or None if the event
+        Returns (symbol, price, timestamp, date_fallback), or None if the event
         is not a usable price (counted as invalid or no_price). Does not touch windows.
         """
         self.metrics.received += 1
@@ -117,18 +117,18 @@ class StreamProcessor:
             if sec_type not in ("E", "I"):
                 raise ValueError("unsupported security type")
             trading_date = event.get("trading_date")
-            # Observed index rows carry Trading time and a value but no
-            # Trading date. Explicitly infer their day from system Date.
-            # Keep Trading time; do not replace a supplied invalid trade date
-            # or infer a date for equities. This same-day policy is documented.
-            index_date_fallback = sec_type == "I" and trading_date in (None, "")
-            if index_date_fallback:
+            # Index rows and most Frankfurt equity rows carry Trading time and a
+            # value but no Trading date. Infer their day from system Date, keeping
+            # Trading time; do not replace a supplied invalid trade date.
+            # This same-day policy is documented in docs/stream_processor.md.
+            date_fallback = trading_date in (None, "")
+            if date_fallback:
                 trading_date = event.get("date")
             timestamp = self._timestamp(trading_date, event.get("trading_time"))
         except (ValueError, TypeError, OverflowError):
             self.metrics.invalid += 1
             return None
-        return symbol, price, timestamp, index_date_fallback
+        return symbol, price, timestamp, date_fallback
 
     def process(self, event):
         """Return finalized window rows; skip invalid/non-price/too-late rows."""
@@ -137,7 +137,7 @@ class StreamProcessor:
         parsed = self.parse(event)
         if parsed is None:
             return []
-        symbol, price, timestamp, index_date_fallback = parsed
+        symbol, price, timestamp, date_fallback = parsed
         start = timestamp // WINDOW * WINDOW
         end = start + WINDOW
         # Late events may update open windows. Finalized output is immutable.
@@ -145,8 +145,8 @@ class StreamProcessor:
             self.metrics.late += 1
             return []
         self.metrics.accepted += 1
-        if index_date_fallback:
-            self.metrics.index_date_fallback += 1
+        if date_fallback:
+            self.metrics.date_fallback += 1
         if symbol not in self.states:
             self.states[symbol] = SymbolState()
         key = (start, symbol)
