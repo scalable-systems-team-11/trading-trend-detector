@@ -18,3 +18,5 @@
 - 27.10 (Jens, AI-assisted) Merged Klaus's Kafka/Flink benchmarking branch. Made it so future benchmark results are kept in one folder per run under results/benchmarks/
 - 27.10 (Jens, AI-assisted) Benchmarks (full Monday): real-time load is only ~330 ev/s (peak ~4k), one Python process does ~160k. Bottleneck is getting data in (CSV parsing 59k ev/s, kafka-python 11k ev/s), not processing. Also, benchmarking just monday gives 0 SELL / one BUY per symbol. To my understanding not a bug, EMA100 starting from 0 needs more windows than one day has. The fix: replay the whole week as one stream (haven't tried this yet)
 - 27.10 (Jens, AI-assisted) Try to improve the data reading speed by making the replayer read a pre-extracted .jsonl: TCP pipeline 43k -> 104k ev/s. Next bottleneck seems to be reciever json decoding and kafka-python producer?
+- 07-08.11 (Yuhang) Found a library to optimize calculating Kafka checksums, benchmarked it.
+- 9.11. (Jens) Tried also said library on reciever, benchmarked, added.
