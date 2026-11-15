@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Replay DEBS 2022 trading data CSV files as a paced "real-time" event stream.
 
-Reads the CSV row by row, paces emission according to the event `Time` column
-(scaled by --speed) and writes one JSON object per event to a sink.
+Reads the CSV row by row, paces emission according to the event `Date` and `Time`
+columns (scaled by --speed) and writes one JSON object per event to a sink.
 
 Every option can also be set via an environment variable (REPLAY_<OPTION>),
 command line flags take precedence.
@@ -13,6 +13,9 @@ Examples:
 
     # price events only, 60x speed, starting at market open
     python replayer/replay.py data/*.csv --only-prices --speed 60 --start 08:00
+
+    # several days at one 5-minute window per second, nights shortened to 10 s
+    python replayer/replay.py data/prices-*.jsonl --speed 300 --max-gap 3000 --sink tcp
 
     # as fast as possible into a TCP socket
     python replayer/replay.py data/*.csv --speed 0 --sink tcp --tcp-port 9999
@@ -28,6 +31,8 @@ Examples:
 
 import argparse
 import csv
+import datetime
+import glob
 import json
 import os
 import socket
@@ -56,6 +61,9 @@ def parse_args(argv=None):
                    help="CSV or extracted .jsonl file(s), replayed in order")
     p.add_argument("--speed", type=float, default=float(env("speed", 1.0)),
                    help="replay speed factor: 1 = real time, 60 = one minute per second, 0 = no pacing")
+    p.add_argument("--max-gap", type=float, default=float(env("max_gap", 0)),
+                   help="when pacing, shorten gaps in event time longer than this many seconds "
+                        "(e.g. nights between trading days) to this length (0 = keep gaps)")
     p.add_argument("--only-prices", action="store_true", default=env("only_prices", "") == "1",
                    help="only emit events that carry a non-zero Last price")
     p.add_argument("--symbols", default=env("symbols", ""),
@@ -75,6 +83,8 @@ def parse_args(argv=None):
     p.add_argument("--stamp", action=argparse.BooleanOptionalAction, default=env("stamp", "1") == "1",
                    help="add a sent_ns wall-clock stamp to each event for latency measurement (default: on)")
     args = p.parse_args(argv)
+    # expand wildcards ourselves, so REPLAY_FILES="/data/prices-*.jsonl" works (sorted = day order)
+    args.files = [f for pat in args.files for f in (sorted(glob.glob(pat)) or [pat])]
     if not args.files:
         p.error("no input files given (argument or REPLAY_FILES)")
     return args
@@ -86,6 +96,12 @@ def to_seconds(hms):
     h, m = int(parts[0]), int(parts[1])
     s = float(parts[2]) if len(parts) > 2 else 0.0
     return h * 3600 + m * 60 + s
+
+
+def day_number(date):
+    """'DD-MM-YYYY' -> days since 0001-01-01, so pacing continues across days."""
+    d, m, y = date.split("-")
+    return datetime.date(int(y), int(m), int(d)).toordinal()
 
 
 def read_events(path):
@@ -235,6 +251,9 @@ def replay(args, sink):
     emitted = 0
     skipped = 0  # rows without a parsable Time
     clock_start = None  # (wall time, event time) of the first emitted event
+    latest = None  # latest event time paced so far (date + time, seconds)
+    shortened = 0.0  # event time cut out by --max-gap
+    days = {}  # date string -> day number cache
     wall_begin = time.monotonic()
 
     for path in args.files:
@@ -260,12 +279,28 @@ def replay(args, sink):
             if end is not None and t > end:
                 continue
 
-            # Pace by event time. Events are only roughly ordered, so never
-            # sleep for an event that is older than the replay clock.
+            # Pace by event time (date + time, so day 2+ of a multi-day replay is
+            # paced too). Events are only roughly ordered, so never sleep for an
+            # event that is older than the replay clock.
             if args.speed > 0:
+                date = ev["date"]
+                if date not in days:
+                    try:
+                        days[date] = day_number(date) * 86400
+                    except (AttributeError, ValueError):
+                        days[date] = None  # unusable date: send without pacing
+                if days[date] is None:
+                    t_abs = latest if latest is not None else 0.0
+                else:
+                    t_abs = days[date] + t
                 if clock_start is None:
-                    clock_start = (time.monotonic(), t)
-                due = clock_start[0] + (t - clock_start[1]) / args.speed
+                    clock_start = (time.monotonic(), t_abs)
+                    latest = t_abs
+                if t_abs > latest:
+                    if args.max_gap > 0 and t_abs - latest > args.max_gap:
+                        shortened += t_abs - latest - args.max_gap
+                    latest = t_abs
+                due = clock_start[0] + (t_abs - shortened - clock_start[1]) / args.speed
                 delay = due - time.monotonic()
                 if delay > 0:
                     time.sleep(delay)

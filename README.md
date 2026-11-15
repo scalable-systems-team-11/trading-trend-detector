@@ -86,6 +86,26 @@ docker compose up --build
 
 More details and open decisions: [docs/stream_processor.md](docs/stream_processor.md).
 
+### Live dashboard
+
+[dashboard/server.py](dashboard/server.py) shows the results while a run is going: a chart per
+subscribed symbol (close, EMA38, EMA100 with BUY/SELL markers), a feed of the latest advisories
+across all symbols, and market breadth (share of symbols with EMA38 above EMA100, per exchange).
+It only reads the window files in `output/`, so it works for the TCP, Kafka and Flink paths alike.
+
+```bash
+# start the dashboard, then a paced run of the whole week; open http://localhost:8050
+docker compose --profile dashboard up -d --build dashboard
+REPLAY_FILES="/data/prices-*.jsonl" REPLAY_START= \
+    REPLAY_SPEED=60 REPLAY_MAX_GAP=600 docker compose up --build receiver replayer
+```
+
+`REPLAY_MAX_GAP=600` shortens the nights between trading days to 10 minutes of event time.
+60x is comfortable. At 600x the pipeline could not keep pace (the average load is ~330 events/s,
+so 600x needs ~200k events/s, about twice the TCP pipeline's capacity). To look at a finished run instead, set
+`DASHBOARD_LOAD=/output/windows-<time>.jsonl` (a full week takes about a minute to load).
+Without Docker: `python3 -m dashboard.server [--load "output/windows-<time>.jsonl"]`.
+
 ### Benchmarking
 
 Every receiver run reports a `benchmark` block in its final `closed;` log line

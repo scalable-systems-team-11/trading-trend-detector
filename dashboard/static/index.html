@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trend Detector Live</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.min.css">
+<script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --wash: rgba(11,11,11,0.04);
+  --series-1: #2a78d6;  /* close */
+  --series-2: #eb6834;  /* EMA38 */
+  --series-3: #1baf7a;  /* EMA100 */
+  --good: #0ca30c;      /* BUY (always with ▲ + label) */
+  --good-text: #006300;
+  --critical: #d03b3b;  /* SELL (always with ▼ + label) */
+  --warmup: rgba(137,135,129,0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --wash: rgba(255,255,255,0.05);
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+    --good-text: #0ca30c; --warmup: rgba(137,135,129,0.14);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --wash: rgba(255,255,255,0.05);
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+  --good-text: #0ca30c; --warmup: rgba(137,135,129,0.14);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; padding: 14px 16px 10px; }
+h1 { font-size: 17px; margin: 0; font-weight: 650; }
+.stat { color: var(--ink-2); font-size: 13px; }
+.stat b { color: var(--ink); font-weight: 600; }
+.conn { margin-left: auto; font-size: 13px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.conn.live .dot { background: var(--good); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 0 16px 12px; }
+input, button { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 10px; }
+button { cursor: pointer; }
+button:hover { background: var(--wash); }
+button[aria-pressed="true"] { border-color: var(--ink-2); font-weight: 600; }
+input { width: 220px; max-width: 100%; }
+.grid { display: grid; grid-template-columns: 220px minmax(0, 1fr) 320px; gap: 12px; padding: 0 16px 16px; }
+@media (max-width: 1100px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; min-width: 0; }
+.card h2 { font-size: 13px; font-weight: 600; margin: 0 0 8px; color: var(--ink-2); }
+.note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+#watchlist { list-style: none; margin: 0; padding: 0; }
+#watchlist li { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; padding: 7px 8px; border-radius: 6px;
+  cursor: pointer; border: 1px solid transparent; }
+#watchlist li:hover { background: var(--wash); }
+#watchlist li.sel { border-color: var(--border); background: var(--wash); }
+#watchlist .sym { font-weight: 600; }
+#watchlist .px { text-align: right; font-variant-numeric: tabular-nums; }
+#watchlist .sub { grid-column: 1 / -1; font-size: 12px; color: var(--ink-2); display: flex; justify-content: space-between; }
+#watchlist .rm { border: 0; background: none; padding: 0 2px; color: var(--muted); }
+.trend-up { color: var(--good-text); }
+.trend-down { color: var(--critical); }
+.chart-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.chart-head h2 { font-size: 16px; color: var(--ink); margin: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); margin: 6px 0; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.key-line { width: 16px; height: 2px; border-radius: 1px; display: inline-block; }
+.key-tri { font-size: 11px; }
+.readout { font-size: 12px; color: var(--ink-2); min-height: 18px; font-variant-numeric: tabular-nums; }
+.readout b { color: var(--ink); }
+#price, #breadth { width: 100%; }
+#feed { list-style: none; margin: 0; padding: 0; max-height: 640px; overflow-y: auto; }
+#feed li { display: grid; grid-template-columns: 66px minmax(0, 1fr) auto; white-space: nowrap; gap: 6px; padding: 5px 4px; border-bottom: 1px solid var(--grid);
+  cursor: pointer; font-size: 13px; }
+#feed li:hover { background: var(--wash); }
+#feed li > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; }
+#feed .t { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+#feed .px { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.tag { font-weight: 650; font-size: 12px; }
+.tag.buy { color: var(--good-text); }
+.tag.sell { color: var(--critical); }
+label.tog { font-size: 12px; color: var(--ink-2); display: flex; gap: 6px; align-items: center; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 3px 6px; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--ink-2); font-weight: 600; }
+.empty { color: var(--muted); font-size: 13px; padding: 30px 0; text-align: center; }
+/* uPlot chrome */
+.uplot { font-family: inherit; }
+.u-legend { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Trend Detector</h1>
+  <span class="stat">Market time <b id="clock">–</b></span>
+  <span class="stat">Windows <b id="rows">0</b></span>
+  <span class="stat">Symbols <b id="symbols">0</b></span>
+  <span class="stat"><span class="trend-up">▲</span> BUY <b id="buys">0</b></span>
+  <span class="stat"><span class="trend-down">▼</span> SELL <b id="sells">0</b></span>
+  <span class="conn" id="conn"><span class="dot"></span><span id="conn-text">connecting</span></span>
+</header>
+
+<div class="controls">
+  <input id="search" list="symbol-list" placeholder="Subscribe to symbol, e.g. AIR.FR" autocomplete="off">
+  <datalist id="symbol-list"></datalist>
+  <button id="add">Subscribe</button>
+  <span style="width:12px"></span>
+  <button data-range="110" aria-pressed="false">Last day</button>
+  <button data-range="330" aria-pressed="false">Last 3 days</button>
+  <button data-range="0" aria-pressed="true">Whole run</button>
+  <button id="theme" title="Toggle light/dark">◐</button>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Subscriptions</h2>
+    <ul id="watchlist"></ul>
+    <p class="note">All symbols are calculated; these are the ones you follow live.</p>
+  </section>
+
+  <section style="display:grid; gap:12px; min-width:0">
+    <div class="card">
+      <div class="chart-head">
+        <h2 id="title">–</h2>
+        <span class="stat" id="subtitle"></span>
+      </div>
+      <div class="legend">
+        <span><i class="key-line" style="background:var(--series-1)"></i>Close (last price per 5-min window)</span>
+        <span><i class="key-line" style="background:var(--series-2)"></i>EMA38</span>
+        <span><i class="key-line" style="background:var(--series-3)"></i>EMA100</span>
+        <span><b class="key-tri trend-up">▲</b>BUY (EMA38 crosses above)</span>
+        <span><b class="key-tri trend-down">▼</b>SELL (EMA38 crosses below)</span>
+        <span><i class="key-line" style="background:var(--warmup); height:10px"></i>First day: EMA warm-up</span>
+      </div>
+      <div class="readout" id="readout">&nbsp;</div>
+      <div id="price"></div>
+      <p class="note">Overnight gaps are removed: one step on the x axis is one 5-minute window with trades.
+        EMAs start at 0 (as specified), so each symbol's first day is a warm-up and its first BUY is an artefact of that.
+        Drag to zoom, double-click to reset.</p>
+      <details>
+        <summary class="note" style="cursor:pointer">Table: last 30 windows</summary>
+        <div id="table"></div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="chart-head">
+        <h2 style="font-size:14px">Market breadth</h2>
+        <span class="stat">Share of symbols with EMA38 above EMA100, per exchange</span>
+      </div>
+      <div class="legend">
+        <span><i class="key-line" style="background:var(--series-1)"></i>Paris (FR)</span>
+        <span><i class="key-line" style="background:var(--series-2)"></i>Amsterdam (NL)</span>
+        <span><i class="key-line" style="background:var(--series-3)"></i>Frankfurt (ETR)</span>
+      </div>
+      <div class="readout" id="breadth-readout">&nbsp;</div>
+      <div id="breadth"></div>
+      <p class="note">Both EMAs start at 0 and EMA38 catches up faster, so breadth starts near 100% and is biased
+        upwards until EMA100 has warmed up (about two trading days). Shaded: first day.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="chart-head" style="justify-content:space-between">
+      <h2>Advisories (newest first)</h2>
+      <label class="tog"><input type="checkbox" id="only-subs" style="width:auto"> subscriptions only</label>
+    </div>
+    <ul id="feed"></ul>
+    <p class="note">Click an advisory to subscribe to and show that symbol.</p>
+  </section>
+</div>
+
+<script>
+"use strict";
+const DEFAULT_SUBS = ["PX1.FR", "AEX.NL", "AIR.FR", "ASML.NL", "A1EXV7.ETR"];
+const EXCHANGES = ["FR", "NL", "ETR"];
+const DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+};
+
+let subs = store.get("subs", DEFAULT_SUBS);
+let selected = store.get("selected", subs[0] || null);
+let range = 0;            // 0 = whole run, else last N windows
+let utcOffset = 7200;
+let series = null;        // {symbol, end[], close[], ema38[], ema100[], signals[[i, kind]]}
+let priceChart = null, breadthChart = null;
+let breadth = {end: [], FR: [], NL: [], ETR: []};
+let feed = [];            // newest last
+let latest = {};          // symbol -> {close, bullish, buys, sells}
+let source = null;
+
+const $ = (id) => document.getElementById(id);
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const fmt = (v) => v == null ? "–" : (Math.abs(v) >= 1000 ? v.toFixed(1) : Math.abs(v) >= 10 ? v.toFixed(2) : v.toFixed(4));
+function local(epoch) { return new Date((epoch + utcOffset) * 1000); }  // fields read with getUTC*
+function hhmm(epoch) { const d = local(epoch); return String(d.getUTCHours()).padStart(2, "0") + ":" + String(d.getUTCMinutes()).padStart(2, "0"); }
+function dayLabel(epoch) { const d = local(epoch); return DAY[d.getUTCDay()] + " " + d.getUTCDate() + "." + (d.getUTCMonth() + 1) + "."; }
+function shortDay(epoch) { return DAY[local(epoch).getUTCDay()]; }
+function dayKey(epoch) { return Math.floor((epoch + utcOffset) / 86400); }
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+/* ---------- price chart ---------- */
+function visibleIdx(u) {
+  const n = series ? series.end.length : 0;
+  const lo = Math.max(0, Math.floor(u.scales.x.min ?? 0)), hi = Math.min(n - 1, Math.ceil(u.scales.x.max ?? n - 1));
+  return [lo, hi];
+}
+function triangle(ctx, x, y, up, color, size) {
+  ctx.beginPath();
+  if (up) { ctx.moveTo(x, y - size); ctx.lineTo(x + size, y + size * 0.8); ctx.lineTo(x - size, y + size * 0.8); }
+  else { ctx.moveTo(x, y + size); ctx.lineTo(x + size, y - size * 0.8); ctx.lineTo(x - size, y - size * 0.8); }
+  ctx.closePath();
+  ctx.lineWidth = 2 * devicePixelRatio; ctx.strokeStyle = css("--surface"); ctx.stroke();
+  ctx.fillStyle = color; ctx.fill();
+}
+function drawPriceOverlay(u) {
+  if (!series || !series.end.length) return;
+  const ctx = u.ctx, {left, top, width, height} = u.bbox;
+  const [lo, hi] = visibleIdx(u);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(left, top, width, height); ctx.clip();
+  // first-day warm-up band
+  const firstDay = dayKey(series.end[0]);
+  let w = 0; while (w < series.end.length && dayKey(series.end[w]) === firstDay) w++;
+  if (w > lo) {
+    const x0 = u.valToPos(Math.max(lo, 0) - 0.5, "x", true), x1 = u.valToPos(Math.min(w, hi + 1) - 0.5, "x", true);
+    ctx.fillStyle = css("--warmup"); ctx.fillRect(x0, top, x1 - x0, height);
+  }
+  // day separators + labels
+  ctx.font = `${11 * devicePixelRatio}px system-ui, sans-serif`; ctx.fillStyle = css("--muted");
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";  // uPlot leaves these set by its axes
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = devicePixelRatio;
+  let prev = null, lastLabelX = -1e9;
+  for (let i = lo; i <= hi; i++) {
+    const k = dayKey(series.end[i]);
+    if (k !== prev) {
+      const x = Math.round(u.valToPos(i - 0.5, "x", true));
+      if (prev !== null) { ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + height); ctx.stroke(); }
+      const lx = Math.max(x, left) + 4 * devicePixelRatio;
+      if (lx - lastLabelX > 70 * devicePixelRatio) { ctx.fillText(dayLabel(series.end[i]), lx, top + 13 * devicePixelRatio); lastLabelX = lx; }
+      prev = k;
+    }
+  }
+  // advisories
+  const size = 5.5 * devicePixelRatio;
+  for (const [i, kind] of series.signals) {
+    if (i < lo || i > hi) continue;
+    const x = u.valToPos(i, "x", true), y = u.valToPos(series.close[i], "y", true);
+    if (kind === "BUY") triangle(ctx, x, y + size * 2.2, true, css("--good"), size);
+    else triangle(ctx, x, y - size * 2.2, false, css("--critical"), size);
+  }
+  ctx.restore();
+}
+function yRange(u) {
+  // Scale to the visible closes; EMAs that are still warming up from 0 are clipped, not allowed to flatten the price.
+  if (!series || !series.end.length) return [0, 1];
+  const [lo, hi] = visibleIdx(u);
+  // After 200 windows the zero start weighs (1 - 2/101)^200 ~ 2% in EMA100; before that the EMAs are clipped.
+  let mn = Infinity, mx = -Infinity;
+  for (let i = lo; i <= hi; i++) {
+    const vals = i < 200 ? [series.close[i]] : [series.close[i], series.ema38[i], series.ema100[i]];
+    for (const v of vals) { if (v < mn) mn = v; if (v > mx) mx = v; }
+  }
+  if (!isFinite(mn)) return [0, 1];
+  const pad = (mx - mn) * 0.08 || Math.abs(mx) * 0.01 || 1;
+  return [mn - pad, mx + pad];
+}
+function makePriceChart() {
+  const host = $("price");
+  host.textContent = "";
+  if (priceChart) { priceChart.destroy(); priceChart = null; }
+  const axis = {stroke: css("--muted"), grid: {stroke: css("--grid"), width: 1}, ticks: {stroke: css("--axis"), width: 1, size: 4}, font: "11px system-ui, sans-serif"};
+  priceChart = new uPlot({
+    width: host.clientWidth || 600, height: 340,
+    legend: {show: false},
+    cursor: {points: {size: 8, width: 2, stroke: css("--surface")}, drag: {x: true, y: false}},
+    scales: {x: {time: false}, y: {auto: false}},
+    axes: [
+      {...axis, grid: {show: false}, values: (u, ticks) => ticks.map((t) => series && series.end[Math.round(t)] != null && Number.isInteger(t) ? hhmm(series.end[t]) : ""), space: 60},
+      {...axis, size: 56, values: (u, ticks) => ticks.map(fmt)},
+    ],
+    series: [
+      {},
+      {label: "Close", stroke: css("--series-1"), width: 2, points: {show: false}},
+      {label: "EMA38", stroke: css("--series-2"), width: 2, points: {show: false}},
+      {label: "EMA100", stroke: css("--series-3"), width: 2, points: {show: false}},
+    ],
+    hooks: {
+      draw: [drawPriceOverlay],
+      setCursor: [(u) => showReadout(u.cursor.idx)],
+      // Rescale y to the visible windows whenever the x range changes (zoom, range buttons, live data).
+      setScale: [(u, key) => { if (key === "x") queueMicrotask(() => { const [mn, mx] = yRange(u); u.setScale("y", {min: mn, max: mx}); }); }],
+    },
+  }, priceData(), host);
+  applyRange();
+}
+function priceData() {
+  if (!series) return [[], [], [], []];
+  return [series.end.map((_, i) => i), series.close, series.ema38, series.ema100];
+}
+function showReadout(i) {
+  const r = $("readout");
+  if (!series || i == null || series.end[i] == null) { r.innerHTML = "&nbsp;"; return; }
+  r.textContent = "";
+  const sig = series.signals.find((s) => s[0] === i);
+  const parts = [[dayLabel(series.end[i]) + " " + hhmm(series.end[i] - 300) + "–" + hhmm(series.end[i]), null],
+                 [fmt(series.close[i]), "Close"], [fmt(series.ema38[i]), "EMA38"], [fmt(series.ema100[i]), "EMA100"]];
+  for (const [v, label] of parts) {
+    const s = el("span"); s.style.marginRight = "14px";
+    s.append(el("b", null, v)); if (label) s.append(" " + label);
+    r.append(s);
+  }
+  if (sig) r.append(el("span", "tag " + (sig[1] === "BUY" ? "buy" : "sell"), sig[1] === "BUY" ? "▲ BUY" : "▼ SELL"));
+}
+function applyRange() {
+  if (!priceChart || !series) return;
+  const n = series.end.length;
+  if (!n) return;
+  const lo = range && n > range ? n - range : 0;
+  priceChart.setScale("x", {min: lo - 0.5, max: n - 0.5});
+}
+function renderTitle() {
+  if (!series) { $("title").textContent = selected || "No symbol selected"; $("subtitle").textContent = ""; return; }
+  $("title").textContent = series.symbol;
+  const buys = series.signals.filter((s) => s[1] === "BUY").length;
+  $("subtitle").textContent = `${series.end.length} windows · ${buys} BUY · ${series.signals.length - buys} SELL`;
+}
+function renderTable() {
+  const host = $("table"); host.textContent = "";
+  if (!series) return;
+  const t = el("table"), head = el("tr");
+  for (const h of ["Window end", "Close", "EMA38", "EMA100", "Advisory"]) head.append(el("th", null, h));
+  t.append(head);
+  for (let i = series.end.length - 1; i >= Math.max(0, series.end.length - 30); i--) {
+    const tr = el("tr"), sig = series.signals.find((s) => s[0] === i);
+    for (const v of [dayLabel(series.end[i]) + " " + hhmm(series.end[i]), fmt(series.close[i]), fmt(series.ema38[i]), fmt(series.ema100[i]), sig ? (sig[1] === "BUY" ? "▲ BUY" : "▼ SELL") : ""]) tr.append(el("td", null, v));
+    t.append(tr);
+  }
+  host.append(t);
+}
+async function loadSeries(symbol) {
+  selected = symbol; store.set("selected", symbol);
+  renderWatchlist();
+  try {
+    const r = await fetch("/api/series?symbol=" + encodeURIComponent(symbol));
+    series = r.ok ? await r.json() : {symbol, end: [], close: [], ema38: [], ema100: [], signals: []};
+  } catch (e) { series = null; }
+  if (series && series.utc_offset != null) utcOffset = series.utc_offset;
+  renderTitle(); renderTable();
+  if (!priceChart) makePriceChart(); else { priceChart.setData(priceData(), false); applyRange(); }
+  $("price").style.display = series && series.end.length ? "" : "none";
+}
+
+/* ---------- breadth chart ---------- */
+function makeBreadthChart() {
+  const host = $("breadth");
+  if (breadthChart) { breadthChart.destroy(); breadthChart = null; }
+  const axis = {stroke: css("--muted"), grid: {stroke: css("--grid"), width: 1}, ticks: {stroke: css("--axis"), width: 1, size: 4}, font: "11px system-ui, sans-serif"};
+  breadthChart = new uPlot({
+    width: host.clientWidth || 600, height: 180,
+    legend: {show: false},
+    cursor: {points: {size: 7, width: 2, stroke: css("--surface")}, drag: {x: false, y: false}},
+    scales: {x: {time: false}, y: {range: [0, 100]}},
+    axes: [
+      {...axis, grid: {show: false}, space: 90, values: (u, ticks) => ticks.map((t) => breadth.end[t] != null && Number.isInteger(t) ? shortDay(breadth.end[t]) + " " + hhmm(breadth.end[t]) : "")},
+      {...axis, size: 44, values: (u, ticks) => ticks.map((t) => t + "%"), splits: () => [0, 25, 50, 75, 100]},
+    ],
+    series: [{},
+      {stroke: css("--series-1"), width: 2, points: {show: false}},
+      {stroke: css("--series-2"), width: 2, points: {show: false}},
+      {stroke: css("--series-3"), width: 2, points: {show: false}}],
+    hooks: {
+      setCursor: [(u) => {
+        const i = u.cursor.idx, r = $("breadth-readout");
+        if (i == null || breadth.end[i] == null) { r.innerHTML = "&nbsp;"; return; }
+        r.textContent = "";
+        r.append(el("span", null, dayLabel(breadth.end[i]) + " " + hhmm(breadth.end[i]) + "   "));
+        EXCHANGES.forEach((ex) => { const s = el("span"); s.style.marginRight = "14px"; s.append(el("b", null, breadth[ex][i] == null ? "–" : breadth[ex][i].toFixed(0) + "%"), " " + ex); r.append(s); });
+      }],
+      draw: [(u) => {  // first-day warm-up band, day separators, 50% reference line
+        const ctx = u.ctx, {left, top, width, height} = u.bbox;
+        ctx.save();
+        if (breadth.end.length) {
+          const first = dayKey(breadth.end[0]);
+          let w = 0; while (w < breadth.end.length && dayKey(breadth.end[w]) === first) w++;
+          const x1 = u.valToPos(w - 0.5, "x", true);
+          ctx.fillStyle = css("--warmup"); ctx.fillRect(left, top, Math.max(0, x1 - left), height);
+          ctx.strokeStyle = css("--grid"); ctx.lineWidth = devicePixelRatio;
+          for (let i = 1; i < breadth.end.length; i++) {
+            if (dayKey(breadth.end[i]) !== dayKey(breadth.end[i - 1])) {
+              const x = Math.round(u.valToPos(i - 0.5, "x", true));
+              ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + height); ctx.stroke();
+            }
+          }
+        }
+        const y = Math.round(u.valToPos(50, "y", true));
+        ctx.strokeStyle = css("--axis"); ctx.setLineDash([4 * devicePixelRatio, 4 * devicePixelRatio]);
+        ctx.beginPath(); ctx.moveTo(u.bbox.left, y); ctx.lineTo(u.bbox.left + u.bbox.width, y); ctx.stroke(); ctx.restore();
+      }],
+    },
+  }, breadthData(), host);
+}
+function breadthData() { return [breadth.end.map((_, i) => i), breadth.FR, breadth.NL, breadth.ETR]; }
+async function loadBreadth() {
+  try {
+    const r = await fetch("/api/breadth"); const data = await r.json();
+    const b = {end: [], FR: [], NL: [], ETR: []};
+    for (const [end, counts] of data.points) {
+      b.end.push(end);
+      for (const ex of EXCHANGES) { const c = counts[ex]; b[ex].push(c && c[1] ? 100 * c[0] / c[1] : null); }
+    }
+    breadth = b;
+    if (breadthChart) breadthChart.setData(breadthData());
+  } catch (e) {}
+}
+
+/* ---------- watchlist & feed ---------- */
+function renderWatchlist() {
+  const ul = $("watchlist"); ul.textContent = "";
+  for (const s of subs) {
+    const li = el("li", s === selected ? "sel" : ""), info = latest[s];
+    li.append(el("span", "sym", s));
+    const right = el("span", "px", info ? fmt(info.close) : "–");
+    li.append(right);
+    const sub = el("span", "sub");
+    if (info && info.bullish != null) sub.append(el("span", info.bullish ? "trend-up" : "trend-down", info.bullish ? "▲ EMA38 above" : "▼ EMA38 below"));
+    else sub.append(el("span", null, "waiting for data"));
+    const rm = el("button", "rm", "×"); rm.title = "Unsubscribe"; rm.setAttribute("aria-label", "Unsubscribe " + s);
+    rm.onclick = (e) => { e.stopPropagation(); subs = subs.filter((x) => x !== s); store.set("subs", subs); if (selected === s) { series = null; loadSeries(subs[0] || ""); } renderWatchlist(); connect(); };
+    sub.append(rm);
+    li.append(sub);
+    li.onclick = () => loadSeries(s);
+    ul.append(li);
+  }
+}
+function subscribe(symbol) {
+  symbol = symbol.trim().toUpperCase();
+  if (!symbol) return;
+  if (!subs.includes(symbol)) { subs.push(symbol); store.set("subs", subs); connect(); }
+  loadSeries(symbol);
+}
+function renderFeed() {
+  const ul = $("feed"); ul.textContent = "";
+  const only = $("only-subs").checked;
+  let shown = 0;
+  for (let i = feed.length - 1; i >= 0 && shown < 150; i--) {
+    const a = feed[i];
+    if (only && !subs.includes(a.symbol)) continue;
+    const li = el("li");
+    li.append(el("span", "t", shortDay(a.end) + " " + hhmm(a.end)));
+    const mid = el("span");
+    mid.append(el("span", "tag " + (a.advisory === "BUY" ? "buy" : "sell"), a.advisory === "BUY" ? "▲ BUY " : "▼ SELL "), a.symbol);
+    li.append(mid, el("span", "px", fmt(a.close)));
+    li.title = dayLabel(a.end) + " " + hhmm(a.end);
+    li.onclick = () => subscribe(a.symbol);
+    ul.append(li); shown++;
+  }
+  if (!shown) ul.append(el("li", "empty", "No advisories yet"));
+}
+
+/* ---------- status & live stream ---------- */
+function renderStatus(s) {
+  if (s.utc_offset != null) utcOffset = s.utc_offset;
+  $("clock").textContent = s.latest_end ? dayLabel(s.latest_end) + " " + hhmm(s.latest_end) : "–";
+  $("rows").textContent = s.rows.toLocaleString("en");
+  $("symbols").textContent = s.symbols.toLocaleString("en");
+  $("buys").textContent = s.buys.toLocaleString("en");
+  $("sells").textContent = s.sells.toLocaleString("en");
+}
+async function refreshSymbols() {
+  try {
+    const list = await (await fetch("/api/symbols")).json();
+    const dl = $("symbol-list"); dl.textContent = "";
+    list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+    for (const s of list) {
+      latest[s.symbol] = {close: s.close, bullish: s.bullish};
+      const o = document.createElement("option"); o.value = s.symbol; dl.append(o);
+    }
+    renderWatchlist();
+  } catch (e) {}
+}
+function setConn(live, text) { $("conn").classList.toggle("live", live); $("conn-text").textContent = text; }
+function connect() {
+  if (source) source.close();
+  source = new EventSource("/events?symbols=" + encodeURIComponent(subs.join(",")));
+  source.onopen = () => setConn(true, "live");
+  source.onerror = () => setConn(false, "reconnecting");
+  source.addEventListener("status", (e) => { renderStatus(JSON.parse(e.data)); setConn(true, "live"); });
+  source.addEventListener("reset", () => { feed = []; latest = {}; series = null; renderFeed(); loadSeries(selected); loadBreadth(); });
+  source.addEventListener("advisories", (e) => { for (const a of JSON.parse(e.data)) feed.push({symbol: a.s, end: a.e, close: a.c, advisory: a.x}); if (feed.length > 2000) feed = feed.slice(-1000); renderFeed(); });
+  source.addEventListener("rows", (e) => {
+    let changed = false;
+    for (const r of JSON.parse(e.data)) {
+      latest[r.s] = {close: r.c, bullish: r.a > r.b};
+      if (series && r.s === series.symbol && (!series.end.length || r.e > series.end[series.end.length - 1])) {
+        series.end.push(r.e); series.close.push(r.c); series.ema38.push(r.a); series.ema100.push(r.b);
+        if (r.x) series.signals.push([series.end.length - 1, r.x]);
+        changed = true;
+      }
+    }
+    renderWatchlist();
+    if (changed) { $("price").style.display = ""; priceChart.setData(priceData(), false); applyRange(); renderTitle(); }
+  });
+}
+
+/* ---------- boot ---------- */
+async function boot() {
+  try {
+    const s = await (await fetch("/api/status")).json();
+    renderStatus(s);
+    feed = s.advisories.map((a) => ({...a}));
+  } catch (e) {}
+  renderFeed();
+  makeBreadthChart();
+  await Promise.all([refreshSymbols(), loadBreadth()]);
+  await loadSeries(selected || subs[0] || "");
+  connect();
+  setInterval(loadBreadth, 5000);
+  setInterval(refreshSymbols, 30000);
+}
+document.querySelectorAll("[data-range]").forEach((b) => b.onclick = () => {
+  range = +b.dataset.range;
+  document.querySelectorAll("[data-range]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  applyRange();
+});
+$("add").onclick = () => { subscribe($("search").value); $("search").value = ""; };
+$("search").addEventListener("keydown", (e) => { if (e.key === "Enter") $("add").click(); });
+$("only-subs").onchange = renderFeed;
+$("theme").onclick = () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = dark ? "light" : "dark";
+  makePriceChart(); makeBreadthChart();
+};
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { makePriceChart(); makeBreadthChart(); });
+let resizeTimer;
+addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => {
+  if (priceChart) priceChart.setSize({width: $("price").clientWidth, height: 340});
+  if (breadthChart) breadthChart.setSize({width: $("breadth").clientWidth, height: 180});
+}, 150); });
+boot();
+</script>
+</body>
+</html>
