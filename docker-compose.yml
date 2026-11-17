@@ -23,11 +23,11 @@ services:
       - ./data:/data:ro
     environment:
       # Override any of these in .env (see .env.example).
-      REPLAY_FILES: "${REPLAY_FILES:-/data/debs2022-gc-trading-day-08-11-21.csv}"
+      REPLAY_FILES: "${REPLAY_FILES:-/data/prices-*.jsonl}"  # the whole week, in day order
       REPLAY_SPEED: "${REPLAY_SPEED:-60}"
-      REPLAY_MAX_GAP: "${REPLAY_MAX_GAP:-0}"  # e.g. 600: shorten nights to 10 min of event time
+      REPLAY_MAX_GAP: "${REPLAY_MAX_GAP:-600}"  # when paced, shorten nights to 10 min of event time
       REPLAY_ONLY_PRICES: "${REPLAY_ONLY_PRICES:-1}"
-      REPLAY_START: "${REPLAY_START-08:00}"
+      REPLAY_START: "${REPLAY_START:-}"
       REPLAY_END: "${REPLAY_END:-}"
       REPLAY_SYMBOLS: "${REPLAY_SYMBOLS:-}"
       REPLAY_LIMIT: "${REPLAY_LIMIT:-0}"
@@ -35,11 +35,10 @@ services:
       REPLAY_TCP_HOST: receiver
       REPLAY_TCP_PORT: "9999"
 
-  # ---- Live dashboard: add --profile dashboard, then open http://localhost:8050 ----
+  # ---- Live dashboard: http://localhost:8050 ----
   # Follows the newest run's window files in ./output (TCP, Kafka or Flink); set
   # DASHBOARD_LOAD="/output/windows-<time>.jsonl" to show a finished run instead.
   dashboard:
-    profiles: [dashboard]
     build: ./dashboard
     ports:
       - "8050:8050"
@@ -120,11 +119,11 @@ services:
     volumes:
       - ./data:/data:ro
     environment:
-      REPLAY_FILES: "${REPLAY_FILES:-/data/debs2022-gc-trading-day-08-11-21.csv}"
+      REPLAY_FILES: "${REPLAY_FILES:-/data/prices-*.jsonl}"  # the whole week, in day order
       REPLAY_SPEED: "${REPLAY_SPEED:-0}"
-      REPLAY_MAX_GAP: "${REPLAY_MAX_GAP:-0}"
+      REPLAY_MAX_GAP: "${REPLAY_MAX_GAP:-600}"
       REPLAY_ONLY_PRICES: "${REPLAY_ONLY_PRICES:-1}"
-      REPLAY_START: "${REPLAY_START-08:00}"
+      REPLAY_START: "${REPLAY_START:-}"
       REPLAY_END: "${REPLAY_END:-}"
       REPLAY_SYMBOLS: "${REPLAY_SYMBOLS:-}"
       REPLAY_LIMIT: "${REPLAY_LIMIT:-0}"

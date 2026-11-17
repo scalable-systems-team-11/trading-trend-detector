@@ -1,2 +1,2 @@
 Put the DEBS 2022 trading data CSV files here (they are git-ignored).
-See the "Data" section in README.md for the download command.
+See "Quick start" in README.md for where to get them and how to extract the price events.
