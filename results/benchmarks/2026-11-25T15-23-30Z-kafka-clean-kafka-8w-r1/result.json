@@ -1,0 +1,360 @@
+{
+  "kind": "kafka",
+  "label": "clean-kafka-8w-r1",
+  "finished_at": "2026-11-25T15:23:30+0000",
+  "host": {
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.12.16",
+    "cpu_count": 8
+  },
+  "topic": "ticks",
+  "config": {
+    "allowed_lateness_seconds": 0.0,
+    "flush_partial": false,
+    "subscriptions": ""
+  },
+  "workers": 8,
+  "events": 2000000,
+  "active_seconds": 31.473725952,
+  "events_per_second": 63545.066226037656,
+  "worker_events": {
+    "w2": 246448,
+    "w3": 222562,
+    "w6": 244395,
+    "w4": 245975,
+    "w1": 217574,
+    "w7": 292402,
+    "w0": 266751,
+    "w5": 263893
+  },
+  "cpu_seconds": 77.41338970000001,
+  "peak_rss_mb_total": 243.22265625,
+  "latency_ms": {
+    "samples": 67670,
+    "p50": 25.048364,
+    "p95": 123.620763,
+    "p99": 137.409713,
+    "max": 169.799976
+  },
+  "counters": {
+    "lines": 2000008,
+    "malformed": 0,
+    "received": 2000000,
+    "accepted": 1999994,
+    "date_fallback": 1811992,
+    "invalid": 0,
+    "no_price": 0,
+    "late": 6,
+    "windows": 67670,
+    "buy": 3970,
+    "sell": 0,
+    "symbols": 3971,
+    "pending_windows": 3013
+  },
+  "per_worker": [
+    {
+      "worker": 2,
+      "run_id": "1795620179243071111-w2",
+      "partitions": [
+        2
+      ],
+      "counters": {
+        "lines": 246449,
+        "malformed": 0,
+        "received": 246448,
+        "accepted": 246447,
+        "date_fallback": 225755,
+        "invalid": 0,
+        "no_price": 0,
+        "late": 1,
+        "windows": 7871,
+        "buy": 478,
+        "sell": 0,
+        "symbols": 478,
+        "pending_windows": 363
+      },
+      "events": 246448,
+      "started_at_ns": 1795620179375932018,
+      "active_seconds": 31.464231776000815,
+      "events_per_second": 7832.639987987152,
+      "processor_seconds": 1.743651003955165,
+      "processor_events_per_second": 141340.2105358103,
+      "cpu_seconds": 9.5531091,
+      "cpu_utilization": 0.30361806282162546,
+      "peak_rss_mb": 30.69921875,
+      "latency_ms": {
+        "samples": 7871,
+        "p50": 25.71003,
+        "p95": 115.357732,
+        "p99": 145.696922,
+        "max": 145.696922
+      }
+    },
+    {
+      "worker": 3,
+      "run_id": "1795620179211092781-w3",
+      "partitions": [
+        3
+      ],
+      "counters": {
+        "lines": 222563,
+        "malformed": 0,
+        "received": 222562,
+        "accepted": 222561,
+        "date_fallback": 205732,
+        "invalid": 0,
+        "no_price": 0,
+        "late": 1,
+        "windows": 7762,
+        "buy": 451,
+        "sell": 0,
+        "symbols": 451,
+        "pending_windows": 345
+      },
+      "events": 222562,
+      "started_at_ns": 1795620179389913540,
+      "active_seconds": 31.44421610399877,
+      "events_per_second": 7077.994861245618,
+      "processor_seconds": 1.578302365844138,
+      "processor_events_per_second": 141013.5375935809,
+      "cpu_seconds": 9.1036269,
+      "cpu_utilization": 0.28951673878243983,
+      "peak_rss_mb": 29.78515625,
+      "latency_ms": {
+        "samples": 7762,
+        "p50": 19.447532,
+        "p95": 115.522906,
+        "p99": 130.566819,
+        "max": 130.566819
+      }
+    },
+    {
+      "worker": 6,
+      "run_id": "1795620179240070163-w6",
+      "partitions": [
+        6
+      ],
+      "counters": {
+        "lines": 244396,
+        "malformed": 0,
+        "received": 244395,
+        "accepted": 244395,
+        "date_fallback": 217543,
+        "invalid": 0,
+        "no_price": 0,
+        "late": 0,
+        "windows": 8408,
+        "buy": 491,
+        "sell": 0,
+        "symbols": 491,
+        "pending_windows": 368
+      },
+      "events": 244395,
+      "started_at_ns": 1795620179375717201,
+      "active_seconds": 31.466414912996697,
+      "events_per_second": 7766.852394076091,
+      "processor_seconds": 1.7621319476602366,
+      "processor_events_per_second": 138692.79217399601,
+      "cpu_seconds": 9.549313600000001,
+      "cpu_utilization": 0.3034763771596939,
+      "peak_rss_mb": 30.28515625,
+      "latency_ms": {
+        "samples": 8408,
+        "p50": 19.378393,
+        "p95": 116.629881,
+        "p99": 120.392338,
+        "max": 120.392338
+      }
+    },
+    {
+      "worker": 4,
+      "run_id": "1795620179268003313-w4",
+      "partitions": [
+        4
+      ],
+      "counters": {
+        "lines": 245976,
+        "malformed": 0,
+        "received": 245975,
+        "accepted": 245975,
+        "date_fallback": 221996,
+        "invalid": 0,
+        "no_price": 0,
+        "late": 0,
+        "windows": 8510,
+        "buy": 488,
+        "sell": 0,
+        "symbols": 489,
+        "pending_windows": 383
+      },
+      "events": 245975,
+      "started_at_ns": 1795620179381125872,
+      "active_seconds": 31.453587531002995,
+      "events_per_second": 7820.2526105344505,
+      "processor_seconds": 1.7057218757618102,
+      "processor_events_per_second": 144205.8072275954,
+      "cpu_seconds": 9.614336100000001,
+      "cpu_utilization": 0.3056673929650599,
+      "peak_rss_mb": 30.2109375,
+      "latency_ms": {
+        "samples": 8510,
+        "p50": 23.109853,
+        "p95": 137.409713,
+        "p99": 169.799976,
+        "max": 169.799976
+      }
+    },
+    {
+      "worker": 1,
+      "run_id": "1795620179256422627-w1",
+      "partitions": [
+        1
+      ],
+      "counters": {
+        "lines": 217575,
+        "malformed": 0,
+        "received": 217574,
+        "accepted": 217574,
+        "date_fallback": 195019,
+        "invalid": 0,
+        "no_price": 0,
+        "late": 0,
+        "windows": 8381,
+        "buy": 509,
+        "sell": 0,
+        "symbols": 509,
+        "pending_windows": 381
+      },
+      "events": 217574,
+      "started_at_ns": 1795620179376707461,
+      "active_seconds": 31.46995242399862,
+      "events_per_second": 6913.706035160085,
+      "processor_seconds": 1.582522123986564,
+      "processor_events_per_second": 137485.59764327644,
+      "cpu_seconds": 9.025398800000001,
+      "cpu_utilization": 0.2867941672869304,
+      "peak_rss_mb": 30.890625,
+      "latency_ms": {
+        "samples": 8381,
+        "p50": 29.419118,
+        "p95": 134.999681,
+        "p99": 150.036905,
+        "max": 150.036905
+      }
+    },
+    {
+      "worker": 7,
+      "run_id": "1795620179211067884-w7",
+      "partitions": [
+        7
+      ],
+      "counters": {
+        "lines": 292403,
+        "malformed": 0,
+        "received": 292402,
+        "accepted": 292399,
+        "date_fallback": 259477,
+        "invalid": 0,
+        "no_price": 0,
+        "late": 3,
+        "windows": 9160,
+        "buy": 542,
+        "sell": 0,
+        "symbols": 542,
+        "pending_windows": 400
+      },
+      "events": 292402,
+      "started_at_ns": 1795620179380951110,
+      "active_seconds": 31.45682220299932,
+      "events_per_second": 9295.34452377457,
+      "processor_seconds": 2.025942603155272,
+      "processor_events_per_second": 144328.86674311658,
+      "cpu_seconds": 10.4875174,
+      "cpu_utilization": 0.3333940514499918,
+      "peak_rss_mb": 30.38671875,
+      "latency_ms": {
+        "samples": 9160,
+        "p50": 30.016603,
+        "p95": 125.90448,
+        "p99": 125.969988,
+        "max": 125.969988
+      }
+    },
+    {
+      "worker": 0,
+      "run_id": "1795620179228809757-w0",
+      "partitions": [
+        0
+      ],
+      "counters": {
+        "lines": 266752,
+        "malformed": 0,
+        "received": 266751,
+        "accepted": 266751,
+        "date_fallback": 244544,
+        "invalid": 0,
+        "no_price": 0,
+        "late": 0,
+        "windows": 8561,
+        "buy": 521,
+        "sell": 0,
+        "symbols": 521,
+        "pending_windows": 378
+      },
+      "events": 266751,
+      "started_at_ns": 1795620179372934095,
+      "active_seconds": 31.470924566005124,
+      "events_per_second": 8476.10941459738,
+      "processor_seconds": 1.8606606987450505,
+      "processor_events_per_second": 143363.59131996182,
+      "cpu_seconds": 10.02626,
+      "cpu_utilization": 0.3185880344561075,
+      "peak_rss_mb": 30.7109375,
+      "latency_ms": {
+        "samples": 8561,
+        "p50": 20.107857,
+        "p95": 124.037124,
+        "p99": 131.758191,
+        "max": 131.758191
+      }
+    },
+    {
+      "worker": 5,
+      "run_id": "1795620179239353612-w5",
+      "partitions": [
+        5
+      ],
+      "counters": {
+        "lines": 263894,
+        "malformed": 0,
+        "received": 263893,
+        "accepted": 263892,
+        "date_fallback": 241926,
+        "invalid": 0,
+        "no_price": 0,
+        "late": 1,
+        "windows": 9017,
+        "buy": 490,
+        "sell": 0,
+        "symbols": 490,
+        "pending_windows": 395
+      },
+      "events": 263893,
+      "started_at_ns": 1795620179393165716,
+      "active_seconds": 31.44171235000249,
+      "events_per_second": 8393.08613546231,
+      "processor_seconds": 1.8387482710240874,
+      "processor_events_per_second": 143517.74201969762,
+      "cpu_seconds": 10.053827799999999,
+      "cpu_utilization": 0.3197608224413135,
+      "peak_rss_mb": 30.25390625,
+      "latency_ms": {
+        "samples": 9017,
+        "p50": 35.110989,
+        "p95": 116.497955,
+        "p99": 123.620763,
+        "max": 123.620763
+      }
+    }
+  ]
+}

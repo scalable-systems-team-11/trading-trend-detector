@@ -1,0 +1,87 @@
+{
+  "kind": "flink",
+  "run_id": "1795619275451108301-flink",
+  "label": "pilot-flink-1p",
+  "finished_at": "2026-11-25T15:17:48+0000",
+  "host": {
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.36",
+    "python": "3.11.18",
+    "cpu_count": 8
+  },
+  "topic": "ticks",
+  "config": {
+    "allowed_lateness_seconds": 0.0,
+    "flush_partial": false,
+    "subscriptions": "",
+    "partitions": 1,
+    "parallelism": 1,
+    "watermark_interval_ms": 50
+  },
+  "total_seconds": 590.9012233699978,
+  "events": 300000,
+  "active_seconds": 582.424462624,
+  "events_per_second": 515.0882547900005,
+  "counters": {
+    "lines": 300001,
+    "malformed": 0,
+    "eos": 1,
+    "received": 300000,
+    "invalid": 0,
+    "no_price": 0,
+    "accepted": 300000,
+    "date_fallback": 300000,
+    "late": 0,
+    "windows": 14787,
+    "buy": 1236,
+    "sell": 0,
+    "pending_windows": 1236,
+    "symbols": 1236
+  },
+  "python_processes": 1,
+  "python_cpu_seconds": 834.6697427,
+  "python_peak_rss_mb_total": 214.0703125,
+  "subtask_events": {
+    "parse0": 300000,
+    "window0": 300000
+  },
+  "per_subtask": [
+    {
+      "stage": "parse",
+      "subtask": 0,
+      "pid": 118,
+      "events": 300000,
+      "counters": {
+        "lines": 300001,
+        "malformed": 0,
+        "eos": 1,
+        "received": 300000,
+        "invalid": 0,
+        "no_price": 0
+      },
+      "started_ns": 47877161819983,
+      "ended_ns": 48446632192239,
+      "python_cpu_seconds": 834.6697427,
+      "python_peak_rss_mb": 214.0703125
+    },
+    {
+      "stage": "window",
+      "subtask": 0,
+      "pid": 118,
+      "events": 300000,
+      "counters": {
+        "accepted": 300000,
+        "date_fallback": 300000,
+        "late": 0,
+        "windows": 14787,
+        "buy": 1236,
+        "sell": 0,
+        "pending_windows": 1236,
+        "symbols": 1236
+      },
+      "started_ns": 47877318466752,
+      "ended_ns": 48459586282607,
+      "python_cpu_seconds": 834.5547646,
+      "python_peak_rss_mb": 214.0703125
+    }
+  ]
+}

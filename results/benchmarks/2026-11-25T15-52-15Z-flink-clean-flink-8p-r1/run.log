@@ -1,0 +1,26 @@
+producer-1  | [replay] reading /data/prices-08-11-21.jsonl
+producer-1  | [replay] 100000 events, event time 08-11-2021 07:35:00.000, 74908 ev/s
+producer-1  | [replay] 200000 events, event time 08-11-2021 07:55:30.000, 77899 ev/s
+producer-1  | [replay] 300000 events, event time 08-11-2021 08:15:45.000, 76057 ev/s
+producer-1  | [replay] 400000 events, event time 08-11-2021 08:36:00.000, 78501 ev/s
+producer-1  | [replay] 500000 events, event time 08-11-2021 08:56:00.000, 79399 ev/s
+producer-1  | [replay] 600000 events, event time 08-11-2021 09:02:58.000, 79365 ev/s
+producer-1  | [replay] 700000 events, event time 08-11-2021 09:07:27.000, 81090 ev/s
+producer-1  | [replay] 800000 events, event time 08-11-2021 09:11:45.000, 82875 ev/s
+producer-1  | [replay] 900000 events, event time 08-11-2021 09:16:10.000, 82332 ev/s
+producer-1  | [replay] 1000000 events, event time 08-11-2021 09:20:30.000, 83932 ev/s
+producer-1  | [replay] 1100000 events, event time 08-11-2021 09:25:05.000, 85251 ev/s
+producer-1  | [replay] 1200000 events, event time 08-11-2021 09:29:45.000, 86589 ev/s
+producer-1  | [replay] 1300000 events, event time 08-11-2021 09:34:20.000, 87503 ev/s
+producer-1  | [replay] 1400000 events, event time 08-11-2021 09:39:00.000, 88440 ev/s
+producer-1  | [replay] 1500000 events, event time 08-11-2021 09:43:45.000, 88509 ev/s
+producer-1  | [replay] 1600000 events, event time 08-11-2021 09:48:29.000, 88353 ev/s
+producer-1  | [replay] 1700000 events, event time 08-11-2021 09:53:15.000, 88803 ev/s
+producer-1  | [replay] 1800000 events, event time 08-11-2021 09:58:00.000, 88943 ev/s
+producer-1  | [replay] 1900000 events, event time 08-11-2021 10:02:38.000, 89586 ev/s
+producer-1  | [replay] 2000000 events, event time 08-11-2021 10:07:20.000, 90098 ev/s
+producer-1  | [replay] done, 2000000 events emitted, 0 rows skipped (bad time), 22.2 s, 90098 ev/s
+producer-1  | [replay] sent end-of-stream to 8 partitions of 'ticks'
+[flink-job] topic 'ticks': 8 partitions, window operator parallelism 8
+[flink-job] run complete; {"run_id": "1795621805878052411-flink", "total_seconds": 127.24197450400243, "events": 2000000, "active_seconds": 120.820098777, "events_per_second": 16553.53720320523, "counters": {"lines": 2000008, "malformed": 0, "eos": 8, "received": 2000000, "invalid": 0, "no_price": 0, "accepted": 2000000, "date_fallback": 1811998, "late": 0, "windows": 67670, "buy": 3970, "sell": 0, "pending_windows": 3013, "symbols": 3971}, "python_processes": 8, "python_cpu_seconds": 534.9871406, "python_peak_rss_mb_total": 1577.421875, "subtask_events": {"parse0": 244395, "parse1": 292402, "parse2": 266751, "parse3": 217574, "parse4": 246448, "parse5": 222562, "parse6": 245975, "parse7": 263893, "window0": 224112, "window1": 214360, "window2": 320690, "window3": 257095, "window4": 251956, "window5": 239446, "window6": 260778, "window7": 231563}}
+[flink-job] benchmark written to /benchmarks/2026-11-25T15-52-15Z-flink-clean-flink-8p-r1/result.json

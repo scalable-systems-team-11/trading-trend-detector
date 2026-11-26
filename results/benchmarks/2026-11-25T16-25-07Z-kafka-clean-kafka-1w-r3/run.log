@@ -1,0 +1,48 @@
+producer-1  | [replay] reading /data/prices-08-11-21.jsonl
+producer-1  | [replay] 100000 events, event time 08-11-2021 07:35:00.000, 95269 ev/s
+producer-1  | [replay] 200000 events, event time 08-11-2021 07:55:30.000, 96813 ev/s
+producer-1  | [replay] 300000 events, event time 08-11-2021 08:15:45.000, 96839 ev/s
+producer-1  | [replay] 400000 events, event time 08-11-2021 08:36:00.000, 93595 ev/s
+producer-1  | [replay] 500000 events, event time 08-11-2021 08:56:00.000, 94989 ev/s
+producer-1  | [replay] 600000 events, event time 08-11-2021 09:02:58.000, 95908 ev/s
+producer-1  | [replay] 700000 events, event time 08-11-2021 09:07:27.000, 96175 ev/s
+producer-1  | [replay] 800000 events, event time 08-11-2021 09:11:45.000, 96172 ev/s
+producer-1  | [replay] 900000 events, event time 08-11-2021 09:16:10.000, 96276 ev/s
+producer-1  | [replay] 1000000 events, event time 08-11-2021 09:20:30.000, 94556 ev/s
+producer-1  | [replay] 1100000 events, event time 08-11-2021 09:25:05.000, 94414 ev/s
+producer-1  | [replay] 1200000 events, event time 08-11-2021 09:29:45.000, 94745 ev/s
+producer-1  | [replay] 1300000 events, event time 08-11-2021 09:34:20.000, 94867 ev/s
+producer-1  | [replay] 1400000 events, event time 08-11-2021 09:39:00.000, 95125 ev/s
+producer-1  | [replay] 1500000 events, event time 08-11-2021 09:43:45.000, 95536 ev/s
+producer-1  | [replay] 1600000 events, event time 08-11-2021 09:48:29.000, 95519 ev/s
+producer-1  | [replay] 1700000 events, event time 08-11-2021 09:53:15.000, 95028 ev/s
+producer-1  | [replay] 1800000 events, event time 08-11-2021 09:58:00.000, 95289 ev/s
+producer-1  | [replay] 1900000 events, event time 08-11-2021 10:02:38.000, 95328 ev/s
+producer-1  | [replay] 2000000 events, event time 08-11-2021 10:07:20.000, 95395 ev/s
+producer-1  | [replay] done, 2000000 events emitted, 0 rows skipped (bad time), 21.0 s, 95395 ev/s
+producer-1  | [replay] sent end-of-stream to 1 partitions of 'ticks'
+worker-1    | [kafka-worker] starting 1 workers on kafka:9092 topic 'ticks'
+worker-1    | [kafka-worker] w0 owns partitions [0] of 1
+worker-1    | [kafka-worker] w0 #100000 {'received': 100000, 'accepted': 100000, 'date_fallback': 100000, 'invalid': 0, 'no_price': 0, 'late': 0, 'windows': 4944, 'buy': 1227, 'sell': 0, 'symbols': 1227, 'pending_windows': 1120}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #200000 {'received': 200000, 'accepted': 200000, 'date_fallback': 200000, 'invalid': 0, 'no_price': 0, 'late': 0, 'windows': 9852, 'buy': 1227, 'sell': 0, 'symbols': 1227, 'pending_windows': 1227}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #300000 {'received': 300000, 'accepted': 300000, 'date_fallback': 300000, 'invalid': 0, 'no_price': 0, 'late': 0, 'windows': 14787, 'buy': 1236, 'sell': 0, 'symbols': 1236, 'pending_windows': 1236}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #400000 {'received': 400000, 'accepted': 400000, 'date_fallback': 400000, 'invalid': 0, 'no_price': 0, 'late': 0, 'windows': 19735, 'buy': 1240, 'sell': 0, 'symbols': 1240, 'pending_windows': 1240}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #500000 {'received': 500000, 'accepted': 500000, 'date_fallback': 500000, 'invalid': 0, 'no_price': 0, 'late': 0, 'windows': 24695, 'buy': 1240, 'sell': 0, 'symbols': 1240, 'pending_windows': 1240}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #600000 {'received': 600000, 'accepted': 600000, 'date_fallback': 557305, 'invalid': 0, 'no_price': 0, 'late': 0, 'windows': 25935, 'buy': 1240, 'sell': 0, 'symbols': 3394, 'pending_windows': 3394}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #700000 {'received': 700000, 'accepted': 700000, 'date_fallback': 645032, 'invalid': 0, 'no_price': 0, 'late': 0, 'windows': 29587, 'buy': 3652, 'sell': 0, 'symbols': 3772, 'pending_windows': 3127}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #800000 {'received': 800000, 'accepted': 799998, 'date_fallback': 732332, 'invalid': 0, 'no_price': 0, 'late': 2, 'windows': 32854, 'buy': 3787, 'sell': 0, 'symbols': 3795, 'pending_windows': 2986}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #900000 {'received': 900000, 'accepted': 899998, 'date_fallback': 819364, 'invalid': 0, 'no_price': 0, 'late': 2, 'windows': 36024, 'buy': 3803, 'sell': 0, 'symbols': 3835, 'pending_windows': 2989}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1000000 {'received': 1000000, 'accepted': 999998, 'date_fallback': 906481, 'invalid': 0, 'no_price': 0, 'late': 2, 'windows': 39251, 'buy': 3845, 'sell': 0, 'symbols': 3848, 'pending_windows': 2801}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1100000 {'received': 1100000, 'accepted': 1099998, 'date_fallback': 996529, 'invalid': 0, 'no_price': 0, 'late': 2, 'windows': 42577, 'buy': 3897, 'sell': 0, 'symbols': 3898, 'pending_windows': 2593}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1200000 {'received': 1200000, 'accepted': 1199998, 'date_fallback': 1086799, 'invalid': 0, 'no_price': 0, 'late': 2, 'windows': 42577, 'buy': 3897, 'sell': 0, 'symbols': 3911, 'pending_windows': 3189}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1300000 {'received': 1300000, 'accepted': 1299998, 'date_fallback': 1176424, 'invalid': 0, 'no_price': 0, 'late': 2, 'windows': 45789, 'buy': 3912, 'sell': 0, 'symbols': 3917, 'pending_windows': 3107}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1400000 {'received': 1400000, 'accepted': 1399998, 'date_fallback': 1266897, 'invalid': 0, 'no_price': 0, 'late': 2, 'windows': 48925, 'buy': 3918, 'sell': 0, 'symbols': 3923, 'pending_windows': 3064}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1500000 {'received': 1500000, 'accepted': 1499998, 'date_fallback': 1357287, 'invalid': 0, 'no_price': 0, 'late': 2, 'windows': 52034, 'buy': 3923, 'sell': 0, 'symbols': 3924, 'pending_windows': 3056}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1600000 {'received': 1600000, 'accepted': 1599997, 'date_fallback': 1447887, 'invalid': 0, 'no_price': 0, 'late': 3, 'windows': 55144, 'buy': 3924, 'sell': 0, 'symbols': 3928, 'pending_windows': 3045}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1700000 {'received': 1700000, 'accepted': 1699983, 'date_fallback': 1538872, 'invalid': 0, 'no_price': 0, 'late': 17, 'windows': 58266, 'buy': 3931, 'sell': 0, 'symbols': 3934, 'pending_windows': 3038}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1800000 {'received': 1800000, 'accepted': 1799983, 'date_fallback': 1630086, 'invalid': 0, 'no_price': 0, 'late': 17, 'windows': 61376, 'buy': 3937, 'sell': 0, 'symbols': 3941, 'pending_windows': 2999}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #1900000 {'received': 1900000, 'accepted': 1899983, 'date_fallback': 1720813, 'invalid': 0, 'no_price': 0, 'late': 17, 'windows': 64480, 'buy': 3944, 'sell': 0, 'symbols': 3962, 'pending_windows': 3071}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 #2000000 {'received': 2000000, 'accepted': 1999983, 'date_fallback': 1811981, 'invalid': 0, 'no_price': 0, 'late': 17, 'windows': 67670, 'buy': 3970, 'sell': 0, 'symbols': 3971, 'pending_windows': 3013}; waiting for end of partitions [0]
+worker-1    | [kafka-worker] w0 done; {"partitions": [0], "lines": 2000001, "malformed": 0, "received": 2000000, "accepted": 1999983, "date_fallback": 1811981, "invalid": 0, "no_price": 0, "late": 17, "windows": 67670, "buy": 3970, "sell": 0, "symbols": 3971, "pending_windows": 3013, "events_per_second": 68151.26850909714}
+worker-1    | [kafka-worker] run complete; {"workers": 1, "events": 2000000, "active_seconds": 29.346482432, "events_per_second": 68151.26837208807, "worker_events": {"w0": 2000000}, "cpu_seconds": 29.321022499999998, "peak_rss_mb_total": 61.58984375, "latency_ms": {"samples": 67670, "p50": 4434.46698, "p95": 8108.186265, "p99": 8395.532225, "max": 8395.532225}, "counters": {"lines": 2000001, "malformed": 0, "received": 2000000, "accepted": 1999983, "date_fallback": 1811981, "invalid": 0, "no_price": 0, "late": 17, "windows": 67670, "buy": 3970, "sell": 0, "symbols": 3971, "pending_windows": 3013}}
+worker-1    | [kafka-worker] benchmark written to /benchmarks/2026-11-25T16-25-07Z-kafka-clean-kafka-1w-r3/result.json

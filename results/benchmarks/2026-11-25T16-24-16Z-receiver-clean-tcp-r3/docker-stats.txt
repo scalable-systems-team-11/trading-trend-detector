@@ -1,0 +1,17 @@
+18:23:58 trading-trend-detector-receiver-1 96.20% 12.79MiB / 9.717GiB
+18:23:58 trading-trend-detector-replayer-1 91.96% 11.04MiB / 9.717GiB
+18:24:01 trading-trend-detector-replayer-1 92.21% 11.04MiB / 9.717GiB
+18:24:01 trading-trend-detector-receiver-1 97.71% 13.14MiB / 9.717GiB
+18:24:03 trading-trend-detector-replayer-1 94.07% 11.04MiB / 9.717GiB
+18:24:03 trading-trend-detector-receiver-1 99.17% 13.55MiB / 9.717GiB
+18:24:05 trading-trend-detector-replayer-1 92.79% 11.04MiB / 9.717GiB
+18:24:05 trading-trend-detector-receiver-1 97.95% 15.89MiB / 9.717GiB
+18:24:07 trading-trend-detector-replayer-1 94.52% 12.16MiB / 9.717GiB
+18:24:07 trading-trend-detector-receiver-1 98.83% 16.22MiB / 9.717GiB
+18:24:09 trading-trend-detector-replayer-1 96.18% 12.16MiB / 9.717GiB
+18:24:09 trading-trend-detector-receiver-1 98.45% 16.36MiB / 9.717GiB
+18:24:11 trading-trend-detector-replayer-1 95.34% 12.16MiB / 9.717GiB
+18:24:11 trading-trend-detector-receiver-1 98.69% 16.43MiB / 9.717GiB
+18:24:13 trading-trend-detector-replayer-1 90.42% 12.08MiB / 9.717GiB
+18:24:13 trading-trend-detector-receiver-1 98.49% 16.56MiB / 9.717GiB
+18:24:15 trading-trend-detector-receiver-1 97.83% 16.77MiB / 9.717GiB

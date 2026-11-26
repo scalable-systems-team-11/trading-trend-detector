@@ -1,0 +1,9 @@
+producer-1  | [replay] reading /data/prices-08-11-21.jsonl
+producer-1  | [replay] 100000 events, event time 08-11-2021 07:35:00.000, 113642 ev/s
+producer-1  | [replay] 200000 events, event time 08-11-2021 07:55:30.000, 112140 ev/s
+producer-1  | [replay] 300000 events, event time 08-11-2021 08:15:45.000, 111312 ev/s
+producer-1  | [replay] done, 300000 events emitted, 0 rows skipped (bad time), 2.7 s, 111308 ev/s
+producer-1  | [replay] sent end-of-stream to 1 partitions of 'ticks'
+[flink-job] topic 'ticks': 1 partitions, window operator parallelism 1
+[flink-job] run complete; {"run_id": "1795619275451108301-flink", "total_seconds": 590.9012233699978, "events": 300000, "active_seconds": 582.424462624, "events_per_second": 515.0882547900005, "counters": {"lines": 300001, "malformed": 0, "eos": 1, "received": 300000, "invalid": 0, "no_price": 0, "accepted": 300000, "date_fallback": 300000, "late": 0, "windows": 14787, "buy": 1236, "sell": 0, "pending_windows": 1236, "symbols": 1236}, "python_processes": 1, "python_cpu_seconds": 834.6697427, "python_peak_rss_mb_total": 214.0703125, "subtask_events": {"parse0": 300000, "window0": 300000}}
+[flink-job] benchmark written to /benchmarks/2026-11-25T15-17-48Z-flink-pilot-flink-1p/result.json

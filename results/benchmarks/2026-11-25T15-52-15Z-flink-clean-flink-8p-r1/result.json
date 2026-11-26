@@ -1,0 +1,367 @@
+{
+  "kind": "flink",
+  "run_id": "1795621805878052411-flink",
+  "label": "clean-flink-8p-r1",
+  "finished_at": "2026-11-25T15:52:15+0000",
+  "host": {
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.36",
+    "python": "3.11.18",
+    "cpu_count": 8
+  },
+  "topic": "ticks",
+  "config": {
+    "allowed_lateness_seconds": 0.0,
+    "flush_partial": false,
+    "subscriptions": "",
+    "partitions": 8,
+    "parallelism": 8,
+    "watermark_interval_ms": 50
+  },
+  "total_seconds": 127.24197450400243,
+  "events": 2000000,
+  "active_seconds": 120.820098777,
+  "events_per_second": 16553.53720320523,
+  "counters": {
+    "lines": 2000008,
+    "malformed": 0,
+    "eos": 8,
+    "received": 2000000,
+    "invalid": 0,
+    "no_price": 0,
+    "accepted": 2000000,
+    "date_fallback": 1811998,
+    "late": 0,
+    "windows": 67670,
+    "buy": 3970,
+    "sell": 0,
+    "pending_windows": 3013,
+    "symbols": 3971
+  },
+  "python_processes": 8,
+  "python_cpu_seconds": 534.9871406,
+  "python_peak_rss_mb_total": 1577.421875,
+  "subtask_events": {
+    "parse0": 244395,
+    "parse1": 292402,
+    "parse2": 266751,
+    "parse3": 217574,
+    "parse4": 246448,
+    "parse5": 222562,
+    "parse6": 245975,
+    "parse7": 263893,
+    "window0": 224112,
+    "window1": 214360,
+    "window2": 320690,
+    "window3": 257095,
+    "window4": 251956,
+    "window5": 239446,
+    "window6": 260778,
+    "window7": 231563
+  },
+  "per_subtask": [
+    {
+      "stage": "parse",
+      "subtask": 0,
+      "pid": 181,
+      "events": 244395,
+      "counters": {
+        "lines": 244396,
+        "malformed": 0,
+        "eos": 1,
+        "received": 244395,
+        "invalid": 0,
+        "no_price": 0
+      },
+      "started_ns": 50405886626544,
+      "ended_ns": 50485176128463,
+      "python_cpu_seconds": 62.0235985,
+      "python_peak_rss_mb": 198.1875
+    },
+    {
+      "stage": "parse",
+      "subtask": 1,
+      "pid": 194,
+      "events": 292402,
+      "counters": {
+        "lines": 292403,
+        "malformed": 0,
+        "eos": 1,
+        "received": 292402,
+        "invalid": 0,
+        "no_price": 0
+      },
+      "started_ns": 50405869006221,
+      "ended_ns": 50523161766915,
+      "python_cpu_seconds": 65.05078900000001,
+      "python_peak_rss_mb": 195.7578125
+    },
+    {
+      "stage": "parse",
+      "subtask": 2,
+      "pid": 180,
+      "events": 266751,
+      "counters": {
+        "lines": 266752,
+        "malformed": 0,
+        "eos": 1,
+        "received": 266751,
+        "invalid": 0,
+        "no_price": 0
+      },
+      "started_ns": 50405882963862,
+      "ended_ns": 50483244705116,
+      "python_cpu_seconds": 81.1068269,
+      "python_peak_rss_mb": 195.6640625
+    },
+    {
+      "stage": "parse",
+      "subtask": 3,
+      "pid": 179,
+      "events": 217574,
+      "counters": {
+        "lines": 217575,
+        "malformed": 0,
+        "eos": 1,
+        "received": 217574,
+        "invalid": 0,
+        "no_price": 0
+      },
+      "started_ns": 50405870444397,
+      "ended_ns": 50509454979073,
+      "python_cpu_seconds": 65.8621543,
+      "python_peak_rss_mb": 197.7890625
+    },
+    {
+      "stage": "parse",
+      "subtask": 4,
+      "pid": 182,
+      "events": 246448,
+      "counters": {
+        "lines": 246449,
+        "malformed": 0,
+        "eos": 1,
+        "received": 246448,
+        "invalid": 0,
+        "no_price": 0
+      },
+      "started_ns": 50405856692375,
+      "ended_ns": 50523470683989,
+      "python_cpu_seconds": 68.36210919999999,
+      "python_peak_rss_mb": 196.46875
+    },
+    {
+      "stage": "parse",
+      "subtask": 5,
+      "pid": 192,
+      "events": 222562,
+      "counters": {
+        "lines": 222563,
+        "malformed": 0,
+        "eos": 1,
+        "received": 222562,
+        "invalid": 0,
+        "no_price": 0
+      },
+      "started_ns": 50405895706691,
+      "ended_ns": 50485962863680,
+      "python_cpu_seconds": 62.0647215,
+      "python_peak_rss_mb": 196.64453125
+    },
+    {
+      "stage": "parse",
+      "subtask": 6,
+      "pid": 189,
+      "events": 245975,
+      "counters": {
+        "lines": 245976,
+        "malformed": 0,
+        "eos": 1,
+        "received": 245975,
+        "invalid": 0,
+        "no_price": 0
+      },
+      "started_ns": 50405872993634,
+      "ended_ns": 50502346339417,
+      "python_cpu_seconds": 67.47315800000001,
+      "python_peak_rss_mb": 194.91015625
+    },
+    {
+      "stage": "parse",
+      "subtask": 7,
+      "pid": 187,
+      "events": 263893,
+      "counters": {
+        "lines": 263894,
+        "malformed": 0,
+        "eos": 1,
+        "received": 263893,
+        "invalid": 0,
+        "no_price": 0
+      },
+      "started_ns": 50405871365100,
+      "ended_ns": 50509655854681,
+      "python_cpu_seconds": 63.04378320000001,
+      "python_peak_rss_mb": 201.05078125
+    },
+    {
+      "stage": "window",
+      "subtask": 0,
+      "pid": 181,
+      "events": 224112,
+      "counters": {
+        "accepted": 224112,
+        "date_fallback": 206935,
+        "late": 0,
+        "windows": 8031,
+        "buy": 473,
+        "sell": 0,
+        "pending_windows": 351,
+        "symbols": 473
+      },
+      "started_ns": 50406411722142,
+      "ended_ns": 50523744125373,
+      "python_cpu_seconds": 61.8235321,
+      "python_peak_rss_mb": 198.1875
+    },
+    {
+      "stage": "window",
+      "subtask": 1,
+      "pid": 194,
+      "events": 214360,
+      "counters": {
+        "accepted": 214360,
+        "date_fallback": 193398,
+        "late": 0,
+        "windows": 7813,
+        "buy": 495,
+        "sell": 0,
+        "pending_windows": 360,
+        "symbols": 495
+      },
+      "started_ns": 50406416731015,
+      "ended_ns": 50524211648108,
+      "python_cpu_seconds": 64.9281637,
+      "python_peak_rss_mb": 195.7578125
+    },
+    {
+      "stage": "window",
+      "subtask": 2,
+      "pid": 180,
+      "events": 320690,
+      "counters": {
+        "accepted": 320690,
+        "date_fallback": 287969,
+        "late": 0,
+        "windows": 9297,
+        "buy": 544,
+        "sell": 0,
+        "pending_windows": 428,
+        "symbols": 544
+      },
+      "started_ns": 50406294593261,
+      "ended_ns": 50526676791152,
+      "python_cpu_seconds": 80.9789169,
+      "python_peak_rss_mb": 195.8046875
+    },
+    {
+      "stage": "window",
+      "subtask": 3,
+      "pid": 179,
+      "events": 257095,
+      "counters": {
+        "accepted": 257095,
+        "date_fallback": 238384,
+        "late": 0,
+        "windows": 8359,
+        "buy": 502,
+        "sell": 0,
+        "pending_windows": 380,
+        "symbols": 502
+      },
+      "started_ns": 50406374456451,
+      "ended_ns": 50523908742790,
+      "python_cpu_seconds": 65.7141076,
+      "python_peak_rss_mb": 198.15234375
+    },
+    {
+      "stage": "window",
+      "subtask": 4,
+      "pid": 182,
+      "events": 251956,
+      "counters": {
+        "accepted": 251956,
+        "date_fallback": 223186,
+        "late": 0,
+        "windows": 9029,
+        "buy": 509,
+        "sell": 0,
+        "pending_windows": 391,
+        "symbols": 510
+      },
+      "started_ns": 50406283976954,
+      "ended_ns": 50524338894561,
+      "python_cpu_seconds": 68.15771409999999,
+      "python_peak_rss_mb": 196.80859375
+    },
+    {
+      "stage": "window",
+      "subtask": 5,
+      "pid": 192,
+      "events": 239446,
+      "counters": {
+        "accepted": 239446,
+        "date_fallback": 216147,
+        "late": 0,
+        "windows": 8124,
+        "buy": 472,
+        "sell": 0,
+        "pending_windows": 375,
+        "symbols": 472
+      },
+      "started_ns": 50406420963003,
+      "ended_ns": 50523730719203,
+      "python_cpu_seconds": 61.899606799999994,
+      "python_peak_rss_mb": 196.64453125
+    },
+    {
+      "stage": "window",
+      "subtask": 6,
+      "pid": 189,
+      "events": 260778,
+      "counters": {
+        "accepted": 260778,
+        "date_fallback": 239228,
+        "late": 0,
+        "windows": 8550,
+        "buy": 493,
+        "sell": 0,
+        "pending_windows": 372,
+        "symbols": 493
+      },
+      "started_ns": 50406322054103,
+      "ended_ns": 50523821660029,
+      "python_cpu_seconds": 67.3023812,
+      "python_peak_rss_mb": 195.015625
+    },
+    {
+      "stage": "window",
+      "subtask": 7,
+      "pid": 187,
+      "events": 231563,
+      "counters": {
+        "accepted": 231563,
+        "date_fallback": 206751,
+        "late": 0,
+        "windows": 8467,
+        "buy": 482,
+        "sell": 0,
+        "pending_windows": 356,
+        "symbols": 482
+      },
+      "started_ns": 50406244909506,
+      "ended_ns": 50524043736396,
+      "python_cpu_seconds": 62.90598669999999,
+      "python_peak_rss_mb": 201.05078125
+    }
+  ]
+}

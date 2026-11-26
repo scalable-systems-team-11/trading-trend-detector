@@ -1,0 +1,87 @@
+{
+  "kind": "kafka",
+  "label": "clean-kafka-1w-r2",
+  "finished_at": "2026-11-25T15:53:31+0000",
+  "host": {
+    "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.12.16",
+    "cpu_count": 8
+  },
+  "topic": "ticks",
+  "config": {
+    "allowed_lateness_seconds": 0.0,
+    "flush_partial": false,
+    "subscriptions": ""
+  },
+  "workers": 1,
+  "events": 2000000,
+  "active_seconds": 32.557737984,
+  "events_per_second": 61429.32905789921,
+  "worker_events": {
+    "w0": 2000000
+  },
+  "cpu_seconds": 32.4830658,
+  "peak_rss_mb_total": 60.390625,
+  "latency_ms": {
+    "samples": 67670,
+    "p50": 5006.503115,
+    "p95": 8709.528134,
+    "p99": 9231.364616,
+    "max": 9231.364616
+  },
+  "counters": {
+    "lines": 2000001,
+    "malformed": 0,
+    "received": 2000000,
+    "accepted": 1999983,
+    "date_fallback": 1811981,
+    "invalid": 0,
+    "no_price": 0,
+    "late": 17,
+    "windows": 67670,
+    "buy": 3970,
+    "sell": 0,
+    "symbols": 3971,
+    "pending_windows": 3013
+  },
+  "per_worker": [
+    {
+      "worker": 0,
+      "run_id": "1795621979244393533-w0",
+      "partitions": [
+        0
+      ],
+      "counters": {
+        "lines": 2000001,
+        "malformed": 0,
+        "received": 2000000,
+        "accepted": 1999983,
+        "date_fallback": 1811981,
+        "invalid": 0,
+        "no_price": 0,
+        "late": 17,
+        "windows": 67670,
+        "buy": 3970,
+        "sell": 0,
+        "symbols": 3971,
+        "pending_windows": 3013
+      },
+      "events": 2000000,
+      "started_at_ns": 1795621979354035465,
+      "active_seconds": 32.557738064999285,
+      "events_per_second": 61429.32890507128,
+      "processor_seconds": 9.080799385134014,
+      "processor_events_per_second": 220244.9272554306,
+      "cpu_seconds": 32.4830658,
+      "cpu_utilization": 0.9977064664366361,
+      "peak_rss_mb": 60.390625,
+      "latency_ms": {
+        "samples": 67670,
+        "p50": 5006.503115,
+        "p95": 8709.528134,
+        "p99": 9231.364616,
+        "max": 9231.364616
+      }
+    }
+  ]
+}

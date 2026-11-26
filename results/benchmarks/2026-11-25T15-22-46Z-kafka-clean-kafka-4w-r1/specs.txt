@@ -1,0 +1,8 @@
+Machine:  Jens's laptop, AMD Ryzen 7 5825U (8 cores / 16 threads), 15.3 GB RAM
+WSL2:     processors=8, memory=10GB (.wslconfig) -> 8 vCPU visible
+Docker:   2.32.3, no per-container CPU/memory limits
+Run:      Kafka: producer -> topic (4 partitions, key=symbol) -> 4 Python workers
+Input:    REPLAY_FILES=/data/prices-08-11-21.jsonl REPLAY_LIMIT=2000000 REPLAY_SPEED=0
+          REPLAY_START= REPLAY_END= REPLAY_MAX_GAP=600
+          lateness 0s, only price events
+Script:   bench/run_matrix.sh (clean)
